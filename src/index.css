@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 30% 97%;
+    --foreground: 30 15% 12%;
+    --card: 40 30% 99%;
+    --card-foreground: 30 15% 12%;
+    --popover: 40 30% 99%;
+    --popover-foreground: 30 15% 12%;
+    --primary: 30 25% 22%;
+    --primary-foreground: 40 30% 97%;
+    --secondary: 35 20% 90%;
+    --secondary-foreground: 30 15% 18%;
+    --muted: 35 20% 92%;
+    --muted-foreground: 30 10% 40%;
+    --accent: 35 25% 88%;
+    --accent-foreground: 30 15% 18%;
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 40 30% 97%;
+    --border: 30 15% 85%;
+    --input: 30 15% 85%;
+    --ring: 30 25% 35%;
+    --radius: 0.625rem;
+
+    /* Geometry-specific tokens */
+    --glyph: 30 25% 22%;
+    --glyph-broken: 30 10% 60%;
+    --glyph-active: 25 65% 45%;
+  }
+
+  .dark {
+    --background: 220 18% 8%;
+    --foreground: 40 25% 92%;
+    --card: 220 18% 11%;
+    --card-foreground: 40 25% 92%;
+    --popover: 220 18% 11%;
+    --popover-foreground: 40 25% 92%;
+    --primary: 40 25% 92%;
+    --primary-foreground: 220 18% 12%;
+    --secondary: 220 15% 18%;
+    --secondary-foreground: 40 25% 92%;
+    --muted: 220 15% 16%;
+    --muted-foreground: 40 10% 65%;
+    --accent: 220 15% 22%;
+    --accent-foreground: 40 25% 92%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 40 25% 92%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
+    --ring: 40 25% 75%;
+
+    --glyph: 40 25% 92%;
+    --glyph-broken: 220 10% 45%;
+    --glyph-active: 35 80% 65%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  html, body, #root {
+    @apply h-full;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
