@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -50 100 100">
+  <!-- dark rounded background -->
+  <rect x="-50" y="-50" width="100" height="100" rx="22" fill="#0e1017"/>
+  <!-- guide ring -->
+  <circle cx="0" cy="0" r="43" fill="none" stroke="#252933" stroke-width="1.5"/>
+  <!-- pentagon — work layer (position 2, variant 0) -->
+  <path d="M 0.000 -38.000 L 36.140 -11.743 L 22.336 30.743 L -22.336 30.743 L -36.140 -11.743 Z"
+        fill="none" stroke="#ede8dc" stroke-width="2.5"
+        stroke-linejoin="round" stroke-linecap="round" stroke-opacity="0.6"/>
+  <!-- pentagram — gap layer {5/2} (position 0, variant 0) -->
+  <path d="M 0.000 -38.000 L 22.336 30.743 L -36.140 -11.743 L 36.140 -11.743 L -22.336 30.743 Z"
+        fill="none" stroke="#e8a84c" stroke-width="2.5"
+        stroke-linejoin="round" stroke-linecap="round" stroke-opacity="0.9"/>
+</svg>

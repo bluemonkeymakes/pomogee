@@ -60,7 +60,7 @@ function circlePath(cx: number, cy: number, r: number): string {
 }
 
 /** Maximum number of layers stacked in a single day's mandala. */
-export const MAX_SHAPE_INDEX = 12;
+export const MAX_SHAPE_INDEX = 19;
 
 /** Star polygons {n/k} pre-picked to be unicursal (gcd(n, k) = 1) and visually
  * distinct. One entry per layer position 0..MAX_SHAPE_INDEX. */
@@ -78,40 +78,101 @@ const GAP_STAR_PRESETS: ReadonlyArray<readonly [number, number]> = [
   [13, 2],
   [13, 4],
   [13, 6],
+  [14, 3],
+  [14, 5],
+  [15, 4],
+  [15, 7],
+  [16, 3],
+  [16, 5],
+  [17, 2],
 ];
 
+/** Day-of-year derived index in [0, modulo). Stepping by 7 (coprime with
+ * common moduli) keeps consecutive days from looking near-identical while
+ * still being deterministic. All sessions on the same local day share the
+ * same value. */
+export function dayVariantIndex(ts: number, modulo = 3): number {
+  const d = new Date(ts);
+  const start = new Date(d.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((d.getTime() - start.getTime()) / 86400000);
+  return ((dayOfYear * 7) % modulo + modulo) % modulo;
+}
+
+/** Time-of-day bucket → which inscribed motif to draw inside the layer. */
+export type InsetKind = "dot" | "triangle" | "star" | "ring";
+export function insetForTime(ts: number): InsetKind {
+  const h = new Date(ts).getHours();
+  if (h >= 5 && h < 12) return "dot";
+  if (h >= 12 && h < 17) return "triangle";
+  if (h >= 17 && h < 22) return "star";
+  return "ring";
+}
+
+/** Path for the small inscribed motif at the center of a layer. Used as a
+ * decorative inset to mark when (clock-time) the session ran. */
+export function insetPath(kind: InsetKind, R: number): string {
+  const r = R * 0.12;
+  switch (kind) {
+    case "dot":
+      return circlePath(0, 0, r * 0.45);
+    case "triangle":
+      return polygonPath(3, r);
+    case "star":
+      return starPath(5, 2, r);
+    case "ring":
+      return circlePath(0, 0, r);
+  }
+}
+
 /** Pick a shape based on the session's position within the day and the
- * mode that produced it. Each mode has its own visual family so the day's
- * mandala reads at a glance: polygons for flow, rings for rest, stars for
- * re-engagement. Every (position, mode) maps to a distinct path within
- * 0..MAX_SHAPE_INDEX. */
-export function shapeFor(position: number, mode: SessionMode, R: number): ShapeDef {
+ * mode that produced it. Each session always produces exactly one SVG path.
+ * Mode families: polygons (work/continuous), circles (break), star polygons (gap).
+ * If `startedAt` is provided, a day-variant (0–2) is derived from the day-of-year
+ * and applied uniformly — same family, slight rotation or scale difference. */
+export function shapeFor(
+  position: number,
+  mode: SessionMode,
+  R: number,
+  startedAt?: number,
+): ShapeDef {
+  const variant = startedAt != null ? dayVariantIndex(startedAt, 3) : 0;
+  return shapeForVariant(position, mode, R, variant);
+}
+
+/** Same as `shapeFor` but takes a variant index directly. Useful for
+ * previews and the showcase view. */
+export function shapeForVariant(
+  position: number,
+  mode: SessionMode,
+  R: number,
+  variant: number,
+): ShapeDef {
   const p = Math.max(0, Math.min(position, MAX_SHAPE_INDEX));
-  if (mode === "break") {
-    // One concentric circle per layer, evenly spaced from inner to outer.
-    const ringCount = p + 1;
-    const parts: string[] = [];
-    if (ringCount === 1) {
-      parts.push(circlePath(0, 0, R * 0.85));
-    } else {
-      const minR = R * 0.3;
-      const maxR = R * 0.95;
-      const step = (maxR - minR) / (ringCount - 1);
-      for (let c = 0; c < ringCount; c++) {
-        parts.push(circlePath(0, 0, minR + c * step));
-      }
-    }
-    return {
-      d: parts.join(" "),
-      name: ringCount === 1 ? "Circle" : `${ringCount} Rings`,
-      segments: ringCount,
-    };
-  }
-  if (mode === "gap") {
-    const [n, k] = GAP_STAR_PRESETS[p];
-    return { d: starPath(n, k, R), name: `Star {${n}/${k}}`, segments: 1 };
-  }
-  // continuous: polygons with 3..(3 + MAX_SHAPE_INDEX) sides.
+  const v = ((variant % 3) + 3) % 3;
+  if (mode === "break") return breakShape(p, v, R);
+  if (mode === "gap") return gapShape(p, v, R);
+  return continuousShape(p, v, R);
+}
+
+function continuousShape(p: number, variant: number, R: number): ShapeDef {
   const sides = 3 + p;
-  return { d: polygonPath(sides, R), name: `${sides}-gon`, segments: 1 };
+  // Variants shift rotation or scale slightly for day-to-day variety.
+  const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / sides : -Math.PI / 2;
+  const scale = variant === 2 ? 0.88 : 1;
+  return { d: polygonPath(sides, R * scale, rotation), name: `${sides}-gon`, segments: 1 };
+}
+
+function breakShape(p: number, variant: number, R: number): ShapeDef {
+  // One circle per break session; radius varies by position and variant.
+  const baseR = R * (0.85 - p * 0.018);
+  const radiusScale = variant === 1 ? 0.93 : variant === 2 ? 0.86 : 1;
+  return { d: circlePath(0, 0, baseR * radiusScale), name: "Circle", segments: 1 };
+}
+
+function gapShape(p: number, variant: number, R: number): ShapeDef {
+  const [n, k] = GAP_STAR_PRESETS[p];
+  // Variants shift rotation or scale slightly for day-to-day variety.
+  const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / n : -Math.PI / 2;
+  const scale = variant === 2 ? 0.88 : 1;
+  return { d: starPath(n, k, R * scale, rotation), name: `Star {${n}/${k}}`, segments: 1 };
 }

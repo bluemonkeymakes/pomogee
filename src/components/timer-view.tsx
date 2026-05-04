@@ -9,7 +9,8 @@ import {
   selectActiveMode,
   toYmd,
 } from "@/lib/store";
-import { formatTime } from "@/lib/utils";
+import type { Session } from "@/lib/types";
+import { cn, formatTime, formatDuration } from "@/lib/utils";
 
 const RING_RADIUS = 92;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -31,18 +32,20 @@ export function TimerView() {
   const streakBroken = useTimer(selectStreakBroken);
   const activeMode = useTimer(selectActiveMode);
   const sessions = useTimer((s) => s.sessions);
+  const startedAt = useTimer((s) => s.startedAt);
 
   const completedLayers = useMemo<GeometryLayer[]>(() => {
     const today = toYmd(Date.now());
     const layers: GeometryLayer[] = [];
     for (const s of sessions) {
       if (s.kind === "work" && s.completed && toYmd(s.startedAt) === today) {
-        layers.push({ mode: s.mode ?? "continuous" });
+        layers.push({ mode: s.mode ?? "continuous", startedAt: s.startedAt });
       }
     }
     return layers;
   }, [sessions]);
-  const activeLayer: GeometryLayer | null = activeMode ? { mode: activeMode } : null;
+  const activeLayer: GeometryLayer | null =
+    activeMode && startedAt != null ? { mode: activeMode, startedAt } : null;
 
   useEffect(() => {
     if (runState !== "running") return;
@@ -121,7 +124,7 @@ export function TimerView() {
             </Button>
             {currentStreak > 0 && (
               <Button variant="secondary" onClick={() => startBreak(suggestLong ? "longBreak" : "shortBreak")}>
-                <Coffee className="h-4 w-4" /> {suggestLong ? "Long" : "Short"} break
+                <Coffee className="h-4 w-4" /> {suggestLong ? "Long" : "Short"} break · {suggestLong ? settings.longBreakMinutes : settings.shortBreakMinutes}m
               </Button>
             )}
           </>
@@ -147,6 +150,57 @@ export function TimerView() {
           </>
         )}
       </div>
+
+      <DayTimeline sessions={sessions} />
+      <TodayTotal sessions={sessions} />
+    </div>
+  );
+}
+
+function TodayTotal({ sessions }: { sessions: Session[] }) {
+  const today = toYmd(Date.now());
+  let seconds = 0;
+  for (const s of sessions) {
+    if (s.kind === "work" && s.completed && toYmd(s.startedAt) === today) {
+      seconds += s.durationSec;
+    }
+  }
+  if (seconds === 0) return null;
+  const minutes = Math.round(seconds / 60);
+  return (
+    <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+      {formatDuration(minutes)} today
+    </div>
+  );
+}
+
+/** Single 24h strip below the timer. Filled dots = completed work, hollow
+ * dots = completed breaks. Gaps in time render as nothing. */
+function DayTimeline({ sessions }: { sessions: Session[] }) {
+  const today = toYmd(Date.now());
+  const items = sessions
+    .filter((s) => s.completed && toYmd(s.startedAt) === today)
+    .map((s) => {
+      const d = new Date(s.startedAt);
+      const fraction = (d.getHours() * 60 + d.getMinutes()) / (24 * 60);
+      return { id: s.id, isWork: s.kind === "work", fraction };
+    });
+
+  return (
+    <div className="relative h-3 w-full max-w-md" aria-label="Today's session timeline">
+      <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" />
+      {items.map((it) => (
+        <div
+          key={it.id}
+          className={cn(
+            "absolute top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full",
+            it.isWork
+              ? "bg-muted-foreground"
+              : "border border-muted-foreground bg-background",
+          )}
+          style={{ left: `${it.fraction * 100}%` }}
+        />
+      ))}
     </div>
   );
 }
