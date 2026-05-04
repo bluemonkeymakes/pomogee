@@ -106,14 +106,14 @@ export function insetForTime(ts: number): InsetKind {
   return "ring";
 }
 
-/** Time-of-day → shape radius scale. Morning sessions are drawn at full size;
- * shapes shrink through the day so each session has a distinct visual footprint. */
+/** Time-of-day → shape radius scale. Night sessions are drawn at full size;
+ * shapes shrink toward morning so each session has a distinct visual footprint. */
 export function scaleForTime(ts: number): number {
   const h = new Date(ts).getHours();
-  if (h >= 5 && h < 12) return 1.0;   // morning
-  if (h >= 12 && h < 17) return 0.82; // midday
-  if (h >= 17 && h < 22) return 0.65; // evening
-  return 0.55;                         // night
+  if (h >= 5 && h < 12) return 0.55;  // morning
+  if (h >= 12 && h < 17) return 0.72; // midday
+  if (h >= 17 && h < 22) return 0.88; // evening
+  return 1.0;                          // night
 }
 
 /** Path for the small inscribed motif at the center of a layer. Used as a
