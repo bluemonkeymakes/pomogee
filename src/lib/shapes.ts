@@ -106,6 +106,16 @@ export function insetForTime(ts: number): InsetKind {
   return "ring";
 }
 
+/** Time-of-day → shape radius scale. Morning sessions are drawn at full size;
+ * shapes shrink through the day so each session has a distinct visual footprint. */
+export function scaleForTime(ts: number): number {
+  const h = new Date(ts).getHours();
+  if (h >= 5 && h < 12) return 1.0;   // morning
+  if (h >= 12 && h < 17) return 0.82; // midday
+  if (h >= 17 && h < 22) return 0.65; // evening
+  return 0.55;                         // night
+}
+
 /** Path for the small inscribed motif at the center of a layer. Used as a
  * decorative inset to mark when (clock-time) the session ran. */
 export function insetPath(kind: InsetKind, R: number): string {
@@ -134,7 +144,8 @@ export function shapeFor(
   startedAt?: number,
 ): ShapeDef {
   const variant = startedAt != null ? dayVariantIndex(startedAt, 3) : 0;
-  return shapeForVariant(position, mode, R, variant);
+  const scaledR = startedAt != null ? R * scaleForTime(startedAt) : R;
+  return shapeForVariant(position, mode, scaledR, variant);
 }
 
 /** Same as `shapeFor` but takes a variant index directly. Useful for
