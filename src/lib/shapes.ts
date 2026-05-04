@@ -134,7 +134,7 @@ export function insetPath(kind: InsetKind, R: number): string {
 
 /** Pick a shape based on the session's position within the day and the
  * mode that produced it. Each session always produces exactly one SVG path.
- * Mode families: polygons (work/continuous), circles (break), star polygons (gap).
+ * Mode families: stars (continuous — rewards flow), circles (break), polygons (gap — lost rhythm).
  * If `startedAt` is provided, a day-variant (0–2) is derived from the day-of-year
  * and applied uniformly — same family, slight rotation or scale difference. */
 export function shapeFor(
@@ -159,8 +159,8 @@ export function shapeForVariant(
   const p = Math.max(0, Math.min(position, MAX_SHAPE_INDEX));
   const v = ((variant % 3) + 3) % 3;
   if (mode === "break") return breakShape(p, v, R);
-  if (mode === "gap") return gapShape(p, v, R);
-  return continuousShape(p, v, R);
+  if (mode === "gap") return continuousShape(p, v, R);
+  return gapShape(p, v, R);
 }
 
 function continuousShape(p: number, variant: number, R: number): ShapeDef {
