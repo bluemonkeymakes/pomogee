@@ -148,6 +148,23 @@ export function shapeFor(
   return shapeForVariant(position, mode, scaledR, variant);
 }
 
+/** Directly pick a shape by explicit family, bypassing mode routing.
+ * Useful for experiments and previews that want to override the normal mapping. */
+export type ShapeFamily = "polygon" | "circle" | "star";
+
+export function shapeFromFamily(
+  family: ShapeFamily,
+  position: number,
+  R: number,
+  variant: number,
+): ShapeDef {
+  const p = Math.max(0, Math.min(position, MAX_SHAPE_INDEX));
+  const v = ((variant % 3) + 3) % 3;
+  if (family === "circle") return breakShape(p, v, R);
+  if (family === "star")   return gapShape(p, v, R);
+  return continuousShape(p, v, R);
+}
+
 /** Same as `shapeFor` but takes a variant index directly. Useful for
  * previews and the showcase view. */
 export function shapeForVariant(
