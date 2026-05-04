@@ -160,16 +160,18 @@ export function TimerView() {
 function TodayTotal({ sessions }: { sessions: Session[] }) {
   const today = toYmd(Date.now());
   let seconds = 0;
+  let count = 0;
   for (const s of sessions) {
     if (s.kind === "work" && s.completed && toYmd(s.startedAt) === today) {
       seconds += s.durationSec;
+      count += 1;
     }
   }
-  if (seconds === 0) return null;
+  if (count === 0) return null;
   const minutes = Math.round(seconds / 60);
   return (
     <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-      {formatDuration(minutes)} today
+      {count} · {formatDuration(minutes)} today
     </div>
   );
 }
