@@ -134,12 +134,9 @@ export function insetPath(kind: InsetKind, R: number): string {
 
 /** Pick a shape based on the session's position within the day and the
  * mode that produced it. Each session always produces exactly one SVG path.
- * - break → circle
- * - continuous, position 0–1 → polygon (building up)
- * - continuous, position 2+  → star   (streak reward, 3rd session onward)
- * - gap → polygon (chain broken, back to basics)
- * If `startedAt` is provided, a day-variant (0–2) and time-of-day radius scale
- * are applied uniformly across the day's sessions. */
+ * Mode families: polygons (work/continuous), circles (break), star polygons (gap).
+ * If `startedAt` is provided, a day-variant (0–2) is derived from the day-of-year
+ * and applied uniformly — same family, slight rotation or scale difference. */
 export function shapeFor(
   position: number,
   mode: SessionMode,
@@ -162,9 +159,7 @@ export function shapeForVariant(
   const p = Math.max(0, Math.min(position, MAX_SHAPE_INDEX));
   const v = ((variant % 3) + 3) % 3;
   if (mode === "break") return breakShape(p, v, R);
-  // Stars are earned after two sessions in a row (position 2+, continuous only).
-  // Gap sessions drop back to polygons — the chain was broken.
-  if (mode === "continuous" && p >= 2) return gapShape(p, v, R);
+  if (mode === "gap") return gapShape(p, v, R);
   return continuousShape(p, v, R);
 }
 

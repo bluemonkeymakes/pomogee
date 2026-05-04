@@ -82,7 +82,7 @@ function RulesLegend() {
     {
       trigger: "session.mode",
       effect: "shape family",
-      detail: "break → circle · gap → n-gon · continuous p0–1 → n-gon · continuous p2+ → star {n/k}",
+      detail: "continuous → n-gon · break → circle · gap → star {n/k}",
     },
     {
       trigger: "position (0–19)",
