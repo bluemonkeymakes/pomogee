@@ -12,12 +12,10 @@ import type { SessionMode } from "./types";
 const TWO_PI = Math.PI * 2;
 
 export interface ShapeDef {
-  /** Path data. */
+  /** Path data — always a single SVG subpath. */
   d: string;
   /** Human label for tooltips/aria. */
   name: string;
-  /** Number of independent subpaths (for staggered drawing if desired). */
-  segments: number;
 }
 
 function polygonPoints(n: number, R: number, rotation = -Math.PI / 2): Array<[number, number]> {
@@ -159,14 +157,14 @@ function continuousShape(p: number, variant: number, R: number): ShapeDef {
   // Variants shift rotation or scale slightly for day-to-day variety.
   const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / sides : -Math.PI / 2;
   const scale = variant === 2 ? 0.88 : 1;
-  return { d: polygonPath(sides, R * scale, rotation), name: `${sides}-gon`, segments: 1 };
+  return { d: polygonPath(sides, R * scale, rotation), name: `${sides}-gon` };
 }
 
 function breakShape(p: number, variant: number, R: number): ShapeDef {
   // One circle per break session; radius varies by position and variant.
   const baseR = R * (0.85 - p * 0.018);
   const radiusScale = variant === 1 ? 0.93 : variant === 2 ? 0.86 : 1;
-  return { d: circlePath(0, 0, baseR * radiusScale), name: "Circle", segments: 1 };
+  return { d: circlePath(0, 0, baseR * radiusScale), name: "Circle" };
 }
 
 function gapShape(p: number, variant: number, R: number): ShapeDef {
@@ -174,5 +172,5 @@ function gapShape(p: number, variant: number, R: number): ShapeDef {
   // Variants shift rotation or scale slightly for day-to-day variety.
   const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / n : -Math.PI / 2;
   const scale = variant === 2 ? 0.88 : 1;
-  return { d: starPath(n, k, R * scale, rotation), name: `Star {${n}/${k}}`, segments: 1 };
+  return { d: starPath(n, k, R * scale, rotation), name: `Star {${n}/${k}}` };
 }
