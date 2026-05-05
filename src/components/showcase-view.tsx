@@ -132,6 +132,22 @@ const SYNTHETIC_GROUPS: Group[] = [
 
 // ── Experiment mandala ─────────────────────────────────────────────────────
 
+/** Mirror of the harmony rule in geometry.tsx: one star per time-zone bucket. */
+function resolveExperimentFamilies(
+  layers: GeometryLayer[],
+  familyFor: FamilyFn,
+): ShapeFamily[] {
+  const claimed = new Set<number>();
+  return layers.map((layer, i) => {
+    const family = familyFor(i, layer.mode);
+    if (family !== "star") return family;
+    const scale = scaleForTime(layer.startedAt);
+    if (claimed.has(scale)) return "polygon";
+    claimed.add(scale);
+    return "star";
+  });
+}
+
 function ExperimentMandala({
   layers,
   experiment,
@@ -142,6 +158,7 @@ function ExperimentMandala({
   size?: number;
 }) {
   const insetIndex = layers.length - 1;
+  const families = resolveExperimentFamilies(layers, experiment.familyFor);
   return (
     <svg
       viewBox={`${-VIEW / 2} ${-VIEW / 2} ${VIEW} ${VIEW}`}
@@ -157,7 +174,7 @@ function ExperimentMandala({
         strokeWidth={0.5} strokeDasharray="2 4"
       />
       {layers.map((layer, i) => {
-        const family  = experiment.familyFor(i, layer.mode);
+        const family  = families[i];
         const variant = dayVariantIndex(layer.startedAt, 3);
         const scale   = experiment.timeScale ? scaleForTime(layer.startedAt) : 1;
         const { d }   = shapeFromFamily(family, i, RADIUS * scale, variant);
@@ -196,7 +213,12 @@ function ExperimentMandala({
 function ExperimentsSection({ groups }: { groups: Group[] }) {
   return (
     <section className="space-y-6">
-      <h3 className="font-serif text-base uppercase tracking-[0.2em]">Experiments</h3>
+      <div className="space-y-1">
+        <h3 className="font-serif text-base uppercase tracking-[0.2em]">Experiments</h3>
+        <p className="text-xs text-muted-foreground">
+          Star-exclusivity rule applied — one star per time-zone bucket. Second gap in same zone renders as polygon.
+        </p>
+      </div>
       <div className="space-y-8">
         {EXPERIMENTS.map((exp) => (
           <div key={exp.id} className="space-y-2">
@@ -310,8 +332,8 @@ function CombosSection() {
       <div className="space-y-1">
         <h3 className="font-serif text-base uppercase tracking-[0.2em]">Stack combinations</h3>
         <p className="text-xs text-muted-foreground">
-          Flat radius · variant 0 · columns show starting position p0 / p4 / p8.
-          Flag any combinations that look bad.
+          Raw — no harmony rules applied. Flat radius · variant 0 · columns = p0 / p4 / p8.
+          Flag any combos that look bad regardless of rules.
         </p>
       </div>
       <div className="overflow-x-auto space-y-8">
