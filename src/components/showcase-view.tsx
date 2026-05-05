@@ -220,6 +220,108 @@ function ExperimentsSection({ groups }: { groups: Group[] }) {
   );
 }
 
+// ── Shape combination tester ──────────────────────────────────────────────
+
+interface ComboSpec {
+  label: string;
+  families: ShapeFamily[];
+}
+
+const COMBOS_2: ComboSpec[] = [
+  { label: "poly · poly",     families: ["polygon", "polygon"] },
+  { label: "poly · circle",   families: ["polygon", "circle"] },
+  { label: "poly · star",     families: ["polygon", "star"] },
+  { label: "circle · circle", families: ["circle", "circle"] },
+  { label: "circle · star",   families: ["circle", "star"] },
+  { label: "star · star",     families: ["star", "star"] },
+];
+
+const COMBOS_3: ComboSpec[] = [
+  { label: "poly · poly · poly",   families: ["polygon", "polygon", "polygon"] },
+  { label: "poly · poly · circle", families: ["polygon", "polygon", "circle"] },
+  { label: "poly · poly · star",   families: ["polygon", "polygon", "star"] },
+  { label: "poly · circle · star", families: ["polygon", "circle", "star"] },
+  { label: "poly · star · star",   families: ["polygon", "star", "star"] },
+  { label: "circ · circ · circ",   families: ["circle", "circle", "circle"] },
+  { label: "circ · circ · star",   families: ["circle", "circle", "star"] },
+  { label: "circ · star · star",   families: ["circle", "star", "star"] },
+  { label: "star · star · star",   families: ["star", "star", "star"] },
+];
+
+const COMBO_STARTS = [0, 4, 8] as const;
+
+function ComboMandala({ families, startPos, size = 110 }: {
+  families: ShapeFamily[];
+  startPos: number;
+  size?: number;
+}) {
+  return (
+    <svg
+      viewBox={`${-VIEW / 2} ${-VIEW / 2} ${VIEW} ${VIEW}`}
+      width={size} height={size}
+      className="select-none rounded-md border bg-card"
+      aria-hidden
+    >
+      <circle cx={0} cy={0} r={RADIUS + 12} fill="none"
+        className="stroke-border" strokeWidth={0.5} strokeDasharray="2 4" />
+      {families.map((family, i) => {
+        const { d } = shapeFromFamily(family, startPos + i, RADIUS, 0);
+        return (
+          <path key={i} d={d} vectorEffect="non-scaling-stroke"
+            fill="none" stroke="currentColor"
+            className="stroke-foreground"
+            strokeWidth={1.6} strokeLinejoin="round" strokeLinecap="round"
+            strokeOpacity={0.85}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
+function ComboGroup({ title, combos }: { title: string; combos: ComboSpec[] }) {
+  return (
+    <div className="space-y-3">
+      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{title}</div>
+      <div className="space-y-4">
+        {combos.map((combo) => (
+          <div key={combo.label} className="flex items-center gap-4">
+            <span className="w-44 shrink-0 font-mono text-[10px] text-muted-foreground">{combo.label}</span>
+            <div className="flex gap-3">
+              {COMBO_STARTS.map((sp) => (
+                <div key={sp} className="flex flex-col items-center gap-0.5">
+                  <ComboMandala families={combo.families} startPos={sp} />
+                  <span className="font-mono text-[9px] text-muted-foreground">
+                    p{sp}–{sp + combo.families.length - 1}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CombosSection() {
+  return (
+    <section className="space-y-6">
+      <div className="space-y-1">
+        <h3 className="font-serif text-base uppercase tracking-[0.2em]">Stack combinations</h3>
+        <p className="text-xs text-muted-foreground">
+          Flat radius · variant 0 · columns show starting position p0 / p4 / p8.
+          Flag any combinations that look bad.
+        </p>
+      </div>
+      <div className="overflow-x-auto space-y-8">
+        <ComboGroup title="2 layers" combos={COMBOS_2} />
+        <ComboGroup title="3 layers" combos={COMBOS_3} />
+      </div>
+    </section>
+  );
+}
+
 // ── Reference grids (mode × variant, time scale, insets) ──────────────────
 
 interface CellProps {
@@ -399,6 +501,7 @@ export function ShowcaseView({ className }: { className?: string }) {
         </p>
       </header>
       <ExperimentsSection groups={groups} />
+      <CombosSection />
       <RulesLegend />
       {MODES.map((mode) => <ModeBlock key={mode} mode={mode} />)}
       <TimeScaleBlock />
