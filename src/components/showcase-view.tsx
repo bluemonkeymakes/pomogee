@@ -276,7 +276,7 @@ const INSET_KINDS: ReadonlyArray<{ kind: InsetKind; bucket: string }> = [
 function RulesLegend() {
   const rules = [
     { trigger: "session.mode",               effect: "shape family",    detail: "continuous→polygon · break→circle · gap→star" },
-    { trigger: "position (0–19)",            effect: "shape complexity",detail: "increments sides / star preset per session" },
+    { trigger: "position (0–19)",            effect: "shape complexity",detail: "polygon sides = 3+p · gap star {n/k} shares n with polygon" },
     { trigger: "day-of-year × 7 mod 3",      effect: "variant (0–2)",   detail: "0: default · 1: rotated half-step · 2: scale 0.88×" },
     { trigger: "startedAt hour",             effect: "radius scale",    detail: "morning 0.55 · midday 0.72 · evening 0.88 · night 1.0" },
     { trigger: "startedAt hour (top layer)", effect: "center inset",    detail: "dot · triangle · star · ring" },
