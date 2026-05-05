@@ -1,4 +1,4 @@
-import { shapeFor, insetPath, insetForTime, MAX_SHAPE_INDEX } from "@/lib/shapes";
+import { shapeFor, insetPath, insetForTime, scaleForTime, MAX_SHAPE_INDEX } from "@/lib/shapes";
 import type { SessionMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -6,6 +6,26 @@ import { cn } from "@/lib/utils";
  * on the path element lets dashoffset drive progress uniformly regardless of
  * geometric length. */
 const NORM = 1000;
+
+/**
+ * Stars (gap mode) fill their interior densely once n≥8, making them exclusive
+ * within their size zone. Rule: at most one star per time-of-day R-scale bucket
+ * (morning / midday / evening / night). A second gap in the same zone renders
+ * as a polygon instead — it's still a disruption, just not a dominant one.
+ * Circles and polygons always pass through unchanged.
+ */
+function resolveRenderModes(layers: ReadonlyArray<GeometryLayer>): SessionMode[] {
+  const claimedScales = new Set<number>();
+  return layers.map((layer) => {
+    if (layer.mode !== "gap") return layer.mode;
+    const scale = scaleForTime(layer.startedAt);
+    if (!claimedScales.has(scale)) {
+      claimedScales.add(scale);
+      return "gap";
+    }
+    return "continuous";
+  });
+}
 
 export interface GeometryLayer {
   mode: SessionMode;
@@ -53,7 +73,9 @@ export function Geometry({
   // the time-of-day inset — drawing it on every layer creates overlapping noise.
   const insetIndex = trimmed.length - 1;
 
-  const calmActive = activeLayer?.mode === "break" || activeLayer?.mode === "gap";
+  const renderModes = resolveRenderModes(trimmed);
+  const calmActive = activeIndex >= 0 &&
+    (renderModes[activeIndex] === "break" || renderModes[activeIndex] === "gap");
 
   return (
     <svg
@@ -74,7 +96,7 @@ export function Geometry({
         strokeDasharray="2 4"
       />
       {trimmed.map((layer, i) => {
-        const { d } = shapeFor(i, layer.mode, RADIUS, layer.startedAt);
+        const { d } = shapeFor(i, renderModes[i], RADIUS, layer.startedAt);
         const isActive = i === activeIndex;
         const isTop = i === insetIndex;
         const clamped = Math.max(0, Math.min(1, progress));
@@ -141,6 +163,7 @@ export function GlyphSummary({
 }) {
   if (layers.length === 0) return <div style={{ width: size, height: size }} className={className} />;
   const trimmed = layers.slice(0, MAX_SHAPE_INDEX + 1);
+  const renderModes = resolveRenderModes(trimmed);
   return (
     <svg
       viewBox={`${-VIEW / 2} ${-VIEW / 2} ${VIEW} ${VIEW}`}
@@ -150,7 +173,7 @@ export function GlyphSummary({
       aria-hidden
     >
       {trimmed.map((layer, i) => {
-        const { d } = shapeFor(i, layer.mode, RADIUS, layer.startedAt);
+        const { d } = shapeFor(i, renderModes[i], RADIUS, layer.startedAt);
         return (
           <path
             key={i}
