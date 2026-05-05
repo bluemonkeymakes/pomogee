@@ -60,19 +60,31 @@ function circlePath(cx: number, cy: number, r: number): string {
 /** Maximum number of layers stacked in a single day's mandala. */
 export const MAX_SHAPE_INDEX = 19;
 
-function gcd(a: number, b: number): number {
-  while (b !== 0) [a, b] = [b, a % b];
-  return a;
-}
-
-/** All valid k values for a unicursal star {n/k}: gcd(n,k)=1 and 2≤k≤⌊n/2⌋. */
-function starKValues(n: number): number[] {
-  const ks: number[] = [];
-  for (let k = 2; k <= Math.floor(n / 2); k++) {
-    if (gcd(n, k) === 1) ks.push(k);
-  }
-  return ks;
-}
+/** Star polygons {n/k} — unicursal (gcd(n,k)=1) and visually distinct.
+ * Pairs alternate between sparser (lower k) and denser (higher k) stars at
+ * the same n to create variety. Indexed by layer position 0..MAX_SHAPE_INDEX. */
+const GAP_STAR_PRESETS: ReadonlyArray<readonly [number, number]> = [
+  [5, 2],
+  [7, 2],
+  [7, 3],
+  [8, 3],
+  [9, 2],
+  [9, 4],
+  [10, 3],
+  [11, 3],
+  [11, 5],
+  [12, 5],
+  [13, 2],
+  [13, 4],
+  [13, 6],
+  [14, 3],
+  [14, 5],
+  [15, 4],
+  [15, 7],
+  [16, 3],
+  [16, 5],
+  [17, 2],
+];
 
 /** Day-of-year derived index in [0, modulo). Stepping by 7 (coprime with
  * common moduli) keeps consecutive days from looking near-identical while
@@ -185,16 +197,7 @@ function breakShape(p: number, variant: number, R: number): ShapeDef {
 }
 
 function gapShape(p: number, variant: number, R: number): ShapeDef {
-  // n matches the polygon at the same position so star tips align with polygon vertices.
-  // n=3,4,6 have no unicursal stars — bump to the nearest n that does.
-  let n = 3 + p;
-  let ks = starKValues(n);
-  if (ks.length === 0) {
-    n = n < 5 ? 5 : 7;
-    ks = starKValues(n);
-  }
-  // variant 0/2: sparser star (kLow); variant 1: denser star (kHigh) + rotated half-step
-  const k = variant === 1 ? ks[ks.length - 1] : ks[0];
+  const [n, k] = GAP_STAR_PRESETS[p];
   const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / n : -Math.PI / 2;
   const scale = variant === 2 ? 0.88 : 1;
   return { d: starPath(n, k, R * scale, rotation), name: `Star {${n}/${k}}` };
