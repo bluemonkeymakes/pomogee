@@ -60,6 +60,11 @@ function circlePath(cx: number, cy: number, r: number): string {
 /** Maximum number of layers stacked in a single day's mandala. */
 export const MAX_SHAPE_INDEX = 19;
 
+/** Shape complexity caps at this position index. Sessions beyond it reuse the
+ * same max-complexity shape — decagon for polygons, {11/3} for stars. Time-of-day
+ * R-scaling still differentiates layers visually; only the line count plateaus. */
+export const COMPLEXITY_CAP = 7;
+
 /** Star polygons {n/k} — unicursal (gcd(n,k)=1) and visually distinct.
  * Pairs alternate between sparser (lower k) and denser (higher k) stars at
  * the same n to create variety. Indexed by layer position 0..MAX_SHAPE_INDEX. */
@@ -159,7 +164,7 @@ export function shapeFromFamily(
   R: number,
   variant: number,
 ): ShapeDef {
-  const p = Math.max(0, Math.min(position, MAX_SHAPE_INDEX));
+  const p = Math.max(0, Math.min(position, COMPLEXITY_CAP));
   const v = ((variant % 3) + 3) % 3;
   if (family === "circle") return breakShape(p, v, R);
   if (family === "star")   return gapShape(p, v, R);
@@ -174,7 +179,7 @@ export function shapeForVariant(
   R: number,
   variant: number,
 ): ShapeDef {
-  const p = Math.max(0, Math.min(position, MAX_SHAPE_INDEX));
+  const p = Math.max(0, Math.min(position, COMPLEXITY_CAP));
   const v = ((variant % 3) + 3) % 3;
   if (mode === "break") return breakShape(p, v, R);
   if (mode === "gap") return gapShape(p, v, R);

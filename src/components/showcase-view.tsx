@@ -7,6 +7,7 @@ import {
   scaleForTime,
   dayVariantIndex,
   MAX_SHAPE_INDEX,
+  COMPLEXITY_CAP,
   type ShapeFamily,
   type InsetKind,
 } from "@/lib/shapes";
@@ -332,8 +333,8 @@ function CombosSection() {
       <div className="space-y-1">
         <h3 className="font-serif text-base uppercase tracking-[0.2em]">Stack combinations</h3>
         <p className="text-xs text-muted-foreground">
-          Raw — no harmony rules applied. Flat radius · variant 0 · columns = p0 / p4 / p8.
-          Flag any combos that look bad regardless of rules.
+          Flat radius · variant 0 · columns = p0 / p4 / p8.
+          Complexity cap at p{COMPLEXITY_CAP} — shapes plateau beyond that position.
         </p>
       </div>
       <div className="overflow-x-auto space-y-8">
