@@ -114,7 +114,7 @@ export function Geometry({
                 strokeWidth={1.2}
                 strokeLinejoin="round"
                 strokeLinecap="round"
-                strokeOpacity={isActive ? clamped * 0.85 : broken ? 0.45 : 0.75}
+                strokeOpacity={isActive ? 0.25 + clamped * 0.6 : broken ? 0.45 : 0.75}
               />
             )}
           </g>
