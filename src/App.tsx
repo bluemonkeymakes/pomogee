@@ -13,7 +13,18 @@ function App() {
         <div className="flex min-h-full flex-col">
           <header className="flex items-center justify-between border-b px-6 py-3">
             <div className="flex items-baseline gap-2">
-              <span className="font-serif text-xl tracking-wide">Pomoge</span>
+              <span className="font-serif text-xl tracking-wide">
+                Pomo
+                <svg viewBox="-50 -50 100 100" width="18" height="18" className="inline-block align-middle mx-0.5 -translate-y-px" aria-hidden>
+                  <path d="M 0.000 -38.000 L 36.140 -11.743 L 22.336 30.743 L -22.336 30.743 L -36.140 -11.743 Z"
+                    fill="none" stroke="currentColor" strokeWidth="7"
+                    strokeLinejoin="round" strokeLinecap="round" strokeOpacity="0.5"/>
+                  <path d="M 0.000 -38.000 L 22.336 30.743 L -36.140 -11.743 L 36.140 -11.743 L -22.336 30.743 Z"
+                    fill="none" stroke="currentColor" strokeWidth="7"
+                    strokeLinejoin="round" strokeLinecap="round" strokeOpacity="0.9"/>
+                </svg>
+                gee
+              </span>
               <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">sacred focus</span>
             </div>
             <div className="flex items-center gap-1">
