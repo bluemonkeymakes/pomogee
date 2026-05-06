@@ -16,9 +16,12 @@ function App() {
               <span className="font-serif text-xl tracking-wide">
                 Pom
                 <svg viewBox="-50 -50 100 100" width="20" height="20" className="inline-block align-middle mx-0.5 -translate-y-px" aria-hidden>
-                  <circle cx="0" cy="0" r="38" fill="none" stroke="currentColor" strokeWidth="3" strokeOpacity="0.3"/>
-                  <path d="M 0 -38 L 22.336 30.743 L -36.140 -11.743 L 36.140 -11.743 L -22.336 30.743 Z"
-                    fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" strokeOpacity="0.85"/>
+                  <path d="M 0 -38 L 22.336 -30.743 L 36.14 -11.743 L 36.14 11.743 L 22.336 30.743 L 0 38 L -22.336 30.743 L -36.14 11.743 L -36.14 -11.743 L -22.336 -30.743 Z"
+                    fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" strokeOpacity="0.28"/>
+                  <path d="M 0 -38 L 36.14 -11.743 L 22.336 30.743 L -22.336 30.743 L -36.14 -11.743 Z"
+                    fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" strokeOpacity="0.55"/>
+                  <path d="M 0 -38 L 32.909 19 L -32.909 19 Z"
+                    fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" strokeOpacity="0.88"/>
                 </svg>
                 gee
               </span>
