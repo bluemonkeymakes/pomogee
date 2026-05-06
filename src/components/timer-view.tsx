@@ -119,33 +119,33 @@ export function TimerView() {
       <div className="flex flex-wrap items-center justify-center gap-2">
         {phase === "idle" && (
           <>
-            <Button onClick={startWork} className="min-w-32">
-              <Play className="h-4 w-4" /> Start focus
+            <Button size="sm" onClick={startWork} className="min-w-28">
+              <Play className="h-3.5 w-3.5" /> Start focus
             </Button>
             {currentStreak > 0 && (
-              <Button variant="secondary" onClick={() => startBreak(suggestLong ? "longBreak" : "shortBreak")}>
-                <Coffee className="h-4 w-4" /> {suggestLong ? "Long" : "Short"} break · {suggestLong ? settings.longBreakMinutes : settings.shortBreakMinutes}m
+              <Button size="sm" variant="secondary" onClick={() => startBreak(suggestLong ? "longBreak" : "shortBreak")}>
+                <Coffee className="h-3.5 w-3.5" /> {suggestLong ? "Long" : "Short"} break · {suggestLong ? settings.longBreakMinutes : settings.shortBreakMinutes}m
               </Button>
             )}
           </>
         )}
         {phase !== "idle" && runState === "running" && (
           <>
-            <Button variant="secondary" onClick={pause}>
-              <Pause className="h-4 w-4" /> Pause
+            <Button size="sm" variant="secondary" onClick={pause}>
+              <Pause className="h-3.5 w-3.5" /> Pause
             </Button>
-            <Button variant="ghost" onClick={stop}>
-              <Square className="h-4 w-4" /> Stop
+            <Button size="sm" variant="ghost" onClick={stop}>
+              <Square className="h-3.5 w-3.5" /> Stop
             </Button>
           </>
         )}
         {phase !== "idle" && runState === "paused" && (
           <>
-            <Button onClick={resume}>
-              <Play className="h-4 w-4" /> Resume
+            <Button size="sm" onClick={resume}>
+              <Play className="h-3.5 w-3.5" /> Resume
             </Button>
-            <Button variant="ghost" onClick={stop}>
-              <Square className="h-4 w-4" /> Stop
+            <Button size="sm" variant="ghost" onClick={stop}>
+              <Square className="h-3.5 w-3.5" /> Stop
             </Button>
           </>
         )}

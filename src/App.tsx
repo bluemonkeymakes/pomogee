@@ -1,13 +1,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TimerView } from "@/components/timer-view";
 import { CalendarView } from "@/components/calendar-view";
-import { ShowcaseView } from "@/components/showcase-view";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
-
-const isDev = import.meta.env.DEV;
 
 function App() {
   return (
@@ -29,7 +26,6 @@ function App() {
               <TabsList className="mx-auto">
                 <TabsTrigger value="timer">Timer</TabsTrigger>
                 <TabsTrigger value="calendar">Calendar</TabsTrigger>
-                {isDev && <TabsTrigger value="shapes">Shapes</TabsTrigger>}
               </TabsList>
               <TabsContent value="timer" className="mt-6 flex justify-center">
                 <TimerView />
@@ -37,11 +33,6 @@ function App() {
               <TabsContent value="calendar" className="mt-6">
                 <CalendarView />
               </TabsContent>
-              {isDev && (
-                <TabsContent value="shapes" className="mt-6">
-                  <ShowcaseView />
-                </TabsContent>
-              )}
             </Tabs>
           </main>
         </div>
