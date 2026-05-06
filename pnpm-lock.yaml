@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/buda':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@fontsource/kaisei-opti':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -350,6 +356,12 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@fontsource/buda@5.2.8':
+    resolution: {integrity: sha512-/XUzJmnxst21XYdEwix7OEhY8SMAgmZsFPUPcQfPKNJ1AdKjco9JsTKDi9LoJOL3V9ycukz2iJ6mZVIcR6lFBw==}
+
+  '@fontsource/kaisei-opti@5.2.8':
+    resolution: {integrity: sha512-r9uXNQo/2RPvrXZRIH4CopdUHJPlrhTsE/MG7p87st7gOMsokR8OX7yky3nhD2HQTzjQzLfK4Xj1mOpWrNvMEw==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -1703,6 +1715,10 @@ snapshots:
       react-dom: 19.2.5(react@19.2.5)
 
   '@floating-ui/utils@0.2.11': {}
+
+  '@fontsource/buda@5.2.8': {}
+
+  '@fontsource/kaisei-opti@5.2.8': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
