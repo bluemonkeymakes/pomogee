@@ -51,7 +51,7 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        serif: ["'Cormorant Garamond'", "ui-serif", "Georgia", "serif"],
+        serif: ["'Kaisei Opti'", "ui-serif", "Georgia", "serif"],
       },
       keyframes: {
         "accordion-down": {
