@@ -202,7 +202,7 @@ function DayTimeline({ sessions }: { sessions: Session[] }) {
         {TIMELINE_MARKERS.map(({ hour }) => (
           <div
             key={hour}
-            className="absolute top-0 h-full w-px bg-border"
+            className="absolute top-1/2 h-1/2 w-px bg-border"
             style={{ left: `${(hour / 24) * 100}%` }}
           />
         ))}
