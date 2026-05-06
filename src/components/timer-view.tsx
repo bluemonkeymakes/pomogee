@@ -176,8 +176,14 @@ function TodayTotal({ sessions }: { sessions: Session[] }) {
   );
 }
 
+const TIMELINE_MARKERS = [
+  { hour: 6,  label: "6am" },
+  { hour: 12, label: "12pm" },
+  { hour: 18, label: "6pm" },
+];
+
 /** Single 24h strip below the timer. Filled dots = completed work, hollow
- * dots = completed breaks. Gaps in time render as nothing. */
+ * dots = completed breaks. Tick marks at 6am, 12pm, 6pm for orientation. */
 function DayTimeline({ sessions }: { sessions: Session[] }) {
   const today = toYmd(Date.now());
   const items = sessions
@@ -189,20 +195,42 @@ function DayTimeline({ sessions }: { sessions: Session[] }) {
     });
 
   return (
-    <div className="relative h-3 w-full max-w-md" aria-label="Today's session timeline">
-      <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" />
-      {items.map((it) => (
-        <div
-          key={it.id}
-          className={cn(
-            "absolute top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full",
-            it.isWork
-              ? "bg-muted-foreground"
-              : "border border-muted-foreground bg-background",
-          )}
-          style={{ left: `${it.fraction * 100}%` }}
-        />
-      ))}
+    <div className="relative w-full max-w-md" aria-label="Today's session timeline">
+      {/* track + dots */}
+      <div className="relative h-3">
+        <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" />
+        {TIMELINE_MARKERS.map(({ hour }) => (
+          <div
+            key={hour}
+            className="absolute top-0 h-full w-px bg-border"
+            style={{ left: `${(hour / 24) * 100}%` }}
+          />
+        ))}
+        {items.map((it) => (
+          <div
+            key={it.id}
+            className={cn(
+              "absolute top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full",
+              it.isWork
+                ? "bg-muted-foreground"
+                : "border border-muted-foreground bg-background",
+            )}
+            style={{ left: `${it.fraction * 100}%` }}
+          />
+        ))}
+      </div>
+      {/* labels */}
+      <div className="relative h-3">
+        {TIMELINE_MARKERS.map(({ hour, label }) => (
+          <span
+            key={hour}
+            className="absolute -translate-x-1/2 font-mono text-[9px] text-muted-foreground/50"
+            style={{ left: `${(hour / 24) * 100}%` }}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
