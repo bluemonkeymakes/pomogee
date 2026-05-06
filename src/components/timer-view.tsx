@@ -78,10 +78,10 @@ export function TimerView() {
         activeLayer={activeLayer}
         progress={progress}
         broken={streakBroken && !drawingActive}
-        size={360}
+        size={420}
       />
 
-      <div className="relative flex h-56 w-56 items-center justify-center">
+      <div className="relative flex h-44 w-44 items-center justify-center">
         <svg
           viewBox="-100 -100 200 200"
           className="absolute inset-0 h-full w-full -rotate-90"
@@ -110,7 +110,7 @@ export function TimerView() {
           <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
             {phaseLabel}
           </div>
-          <div className="mt-1 font-mono text-5xl font-light tabular-nums tracking-tight">
+          <div className="mt-1 font-mono text-4xl font-light tabular-nums tracking-tight">
             {display}
           </div>
         </div>
