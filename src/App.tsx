@@ -14,7 +14,7 @@ function App() {
           <header className="flex items-center justify-between border-b px-6 py-3">
             <div className="flex items-baseline gap-2">
               <span className="font-serif text-xl tracking-wide">
-                Pomo
+                Pom
                 <svg viewBox="-50 -50 100 100" width="20" height="20" className="inline-block align-middle mx-0.5 -translate-y-px" aria-hidden>
                   <path d="M 0 -38 L 32.909 19 L -32.909 19 Z"
                     fill="none" stroke="currentColor" strokeWidth="6" strokeLinejoin="round" strokeLinecap="round" strokeOpacity="0.35"/>
@@ -29,7 +29,6 @@ function App() {
                 </svg>
                 gee
               </span>
-              <span className="text-xs uppercase tracking-[0.25em] text-muted-foreground">sacred focus</span>
             </div>
             <div className="flex items-center gap-1">
               <SettingsDialog />
