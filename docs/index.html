@@ -169,6 +169,56 @@
       margin: 0 2rem;
     }
 
+    /* ── SCREENSHOTS ── */
+    .screenshots {
+      max-width: 900px;
+      margin: 5rem auto 0;
+      padding: 0 2rem;
+    }
+
+    .screenshots-eyebrow {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: var(--fg-muted);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .screenshot-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .screenshot-frame {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background: var(--bg-card);
+      box-shadow: 0 0 0 1px rgba(232,168,76,0.06), 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .screenshot-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .screenshot-caption {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--fg-muted);
+      text-align: center;
+    }
+
     /* ── SHAPES SHOWCASE ── */
     .shapes-row {
       display: flex;
@@ -278,6 +328,9 @@
 
       .shapes-row { gap: 1.5rem; padding: 3rem 1.25rem 0; }
 
+      .screenshots { margin-top: 3.5rem; padding: 0 1.25rem; }
+      .screenshots-grid { grid-template-columns: 1fr; gap: 1rem; }
+
       .features {
         grid-template-columns: 1fr;
         padding: 0 1.25rem;
@@ -296,7 +349,7 @@
     <div class="wordmark">
       <span class="wordmark-name">Pom<svg viewBox="-50 -50 100 100" width="18" height="18" style="display:inline-block;vertical-align:middle;margin:0 1px;transform:translateY(-1px)" aria-hidden="true"><path d="M 0 -38 L 22.336 -30.743 L 36.14 -11.743 L 36.14 11.743 L 22.336 30.743 L 0 38 L -22.336 30.743 L -36.14 11.743 L -36.14 -11.743 L -22.336 -30.743 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-opacity="0.28"/><path d="M 0 -38 L 36.14 -11.743 L 22.336 30.743 L -22.336 30.743 L -36.14 -11.743 Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" stroke-opacity="0.55"/><path d="M 0 -38 L 32.909 19 L -32.909 19 Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" stroke-opacity="0.88"/></svg>gee</span>
     </div>
-    <a href="https://github.com/LucasZapico/pomoge" class="nav-link">GitHub</a>
+    <a href="https://github.com/LucasZapico/pomogeee" class="nav-link">GitHub</a>
   </nav>
 
   <section class="hero">
@@ -326,6 +379,25 @@
   </section>
 
   <hr class="divider" />
+
+  <!-- Screenshot showcase -->
+  <section class="screenshots">
+    <p class="screenshots-eyebrow">In action</p>
+    <div class="screenshots-grid">
+      <div class="screenshot-item">
+        <div class="screenshot-frame">
+          <img src="pomogee-shots-01.png" alt="Timer view — a focus session running with the geometric mandala growing above the countdown" />
+        </div>
+        <span class="screenshot-caption">Focus timer</span>
+      </div>
+      <div class="screenshot-item">
+        <div class="screenshot-frame">
+          <img src="pomogee-shots-02.png" alt="Calendar view — session history for the day with a summary of focus time and breaks" />
+        </div>
+        <span class="screenshot-caption">Session log</span>
+      </div>
+    </div>
+  </section>
 
   <!-- Shape type showcase -->
   <div class="shapes-row">
@@ -390,9 +462,9 @@
       <span style="font-family: Buda, Georgia, serif; font-size: 1rem; color: var(--fg);">Pom<svg viewBox="-50 -50 100 100" width="16" height="16" style="display:inline-block;vertical-align:middle;margin:0 1px;transform:translateY(-1px)" aria-hidden="true"><path d="M 0 -38 L 22.336 -30.743 L 36.14 -11.743 L 36.14 11.743 L 22.336 30.743 L 0 38 L -22.336 30.743 L -36.14 11.743 L -36.14 -11.743 L -22.336 -30.743 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" stroke-opacity="0.28"/><path d="M 0 -38 L 36.14 -11.743 L 22.336 30.743 L -22.336 30.743 L -36.14 -11.743 Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" stroke-opacity="0.55"/><path d="M 0 -38 L 32.909 19 L -32.909 19 Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" stroke-opacity="0.88"/></svg>gee</span>
     </div>
     <div class="footer-right">
-      <a href="https://github.com/LucasZapico/pomoge">GitHub</a>
-      <a href="https://github.com/LucasZapico/pomoge/releases">Releases</a>
-      <a href="https://github.com/LucasZapico/pomoge/issues">Issues</a>
+      <a href="https://github.com/LucasZapico/pomogee">GitHub</a>
+      <a href="https://github.com/LucasZapico/pomogee/releases">Releases</a>
+      <a href="https://github.com/LucasZapico/pomogee/issues">Issues</a>
     </div>
   </footer>
 

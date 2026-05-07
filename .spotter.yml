@@ -1,0 +1,6 @@
+models:
+  # Enable Claude Code for this codebase — good at TypeScript/React
+  - name: sonnet
+    enabled: true
+
+context: full
