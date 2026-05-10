@@ -207,9 +207,9 @@ function breakShape(p: number, variant: number, R: number, overflow = 0): ShapeD
   const outerR = R * (0.85 - p * 0.05 - overflow * 0.025);
   const radiusScale = variant === 1 ? 0.93 : variant === 2 ? 0.86 : 1;
   const r0 = Math.max(outerR, R * 0.1) * radiusScale;
-  // Position p → p rings: each position in the 1–7 cap range has a unique ring
-  // count, so no two break sessions within a day share the same structure.
-  const rings = Math.max(1, p);
+  // Non-overflow: p rings (unique per position 1–7).
+  // Overflow: keep incrementing beyond 7 so positions 8, 9, 10… stay distinct.
+  const rings = Math.max(1, p) + overflow;
   const step = 1 / (rings + 1);
   const paths: string[] = [];
   for (let i = 0; i < rings; i++) {
