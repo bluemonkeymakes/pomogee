@@ -189,12 +189,17 @@ export function shapeForVariant(
   return continuousShape(p, v, R, overflow);
 }
 
+// Golden ratio — irrational relative to any polygon's symmetry period, so
+// overflow rotations never land on a previously-seen orientation within
+// any practically reachable overflow count.
+const PHI = (Math.sqrt(5) - 1) / 2; // ≈ 0.618
+
 function continuousShape(p: number, variant: number, R: number, overflow = 0): ShapeDef {
   const sides = 3 + p;
   // Variants shift rotation or scale slightly for day-to-day variety.
   const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / sides : -Math.PI / 2;
   const scale = variant === 2 ? 0.88 : 1;
-  const overflowRot = overflow * (Math.PI / sides);
+  const overflowRot = overflow * (TWO_PI / sides) * PHI;
   return { d: polygonPath(sides, R * scale, rotation + overflowRot), name: `${sides}-gon` };
 }
 
@@ -202,11 +207,13 @@ function breakShape(p: number, variant: number, R: number, overflow = 0): ShapeD
   const outerR = R * (0.85 - p * 0.05 - overflow * 0.025);
   const radiusScale = variant === 1 ? 0.93 : variant === 2 ? 0.86 : 1;
   const r0 = Math.max(outerR, R * 0.1) * radiusScale;
-  // Cycle 1→2→3 concentric rings so consecutive break sessions look distinct.
-  const rings = (p % 3) + 1;
+  // Position p → p rings: each position in the 1–7 cap range has a unique ring
+  // count, so no two break sessions within a day share the same structure.
+  const rings = Math.max(1, p);
+  const step = 1 / (rings + 1);
   const paths: string[] = [];
   for (let i = 0; i < rings; i++) {
-    paths.push(circlePath(0, 0, r0 * (1 - i * 0.25)));
+    paths.push(circlePath(0, 0, r0 * (1 - i * step)));
   }
   return { d: paths.join(" "), name: rings === 1 ? "Circle" : `Ring ×${rings}` };
 }
@@ -215,6 +222,6 @@ function gapShape(p: number, variant: number, R: number, overflow = 0): ShapeDef
   const [n, k] = GAP_STAR_PRESETS[p];
   const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / n : -Math.PI / 2;
   const scale = variant === 2 ? 0.88 : 1;
-  const overflowRot = overflow * (Math.PI / n);
+  const overflowRot = overflow * (TWO_PI / n) * PHI;
   return { d: starPath(n, k, R * scale, rotation + overflowRot), name: `Star {${n}/${k}}` };
 }
