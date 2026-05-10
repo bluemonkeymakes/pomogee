@@ -19,7 +19,7 @@ export default defineConfig(async () => ({
         background_color: "#0e1017",
         display: "standalone",
         icons: [
-          { src: "icon.png", sizes: "512x512", type: "image/png", purpose: "any maskable" },
+          { src: "icon.png?v=2", sizes: "512x512", type: "image/png", purpose: "any maskable" },
         ],
       },
     }),
