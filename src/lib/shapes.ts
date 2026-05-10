@@ -199,10 +199,16 @@ function continuousShape(p: number, variant: number, R: number, overflow = 0): S
 }
 
 function breakShape(p: number, variant: number, R: number, overflow = 0): ShapeDef {
-  // 5% radius step (was 1.8%) makes consecutive break-mode circles clearly distinct.
-  const baseR = R * (0.85 - p * 0.05 - overflow * 0.025);
+  const outerR = R * (0.85 - p * 0.05 - overflow * 0.025);
   const radiusScale = variant === 1 ? 0.93 : variant === 2 ? 0.86 : 1;
-  return { d: circlePath(0, 0, Math.max(baseR, R * 0.1) * radiusScale), name: "Circle" };
+  const r0 = Math.max(outerR, R * 0.1) * radiusScale;
+  // Cycle 1→2→3 concentric rings so consecutive break sessions look distinct.
+  const rings = (p % 3) + 1;
+  const paths: string[] = [];
+  for (let i = 0; i < rings; i++) {
+    paths.push(circlePath(0, 0, r0 * (1 - i * 0.25)));
+  }
+  return { d: paths.join(" "), name: rings === 1 ? "Circle" : `Ring ×${rings}` };
 }
 
 function gapShape(p: number, variant: number, R: number, overflow = 0): ShapeDef {
