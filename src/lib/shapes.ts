@@ -181,29 +181,34 @@ export function shapeForVariant(
 ): ShapeDef {
   const p = Math.max(0, Math.min(position, COMPLEXITY_CAP));
   const v = ((variant % 3) + 3) % 3;
-  if (mode === "break") return breakShape(p, v, R);
-  if (mode === "gap") return gapShape(p, v, R);
-  return continuousShape(p, v, R);
+  // Sessions beyond the cap get a rotation offset so they remain visually distinct
+  // even when complexity (polygon sides / star type) has stopped increasing.
+  const overflow = Math.max(0, position - COMPLEXITY_CAP);
+  if (mode === "break") return breakShape(p, v, R, overflow);
+  if (mode === "gap") return gapShape(p, v, R, overflow);
+  return continuousShape(p, v, R, overflow);
 }
 
-function continuousShape(p: number, variant: number, R: number): ShapeDef {
+function continuousShape(p: number, variant: number, R: number, overflow = 0): ShapeDef {
   const sides = 3 + p;
   // Variants shift rotation or scale slightly for day-to-day variety.
   const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / sides : -Math.PI / 2;
   const scale = variant === 2 ? 0.88 : 1;
-  return { d: polygonPath(sides, R * scale, rotation), name: `${sides}-gon` };
+  const overflowRot = overflow * (Math.PI / sides);
+  return { d: polygonPath(sides, R * scale, rotation + overflowRot), name: `${sides}-gon` };
 }
 
-function breakShape(p: number, variant: number, R: number): ShapeDef {
-  // One circle per break session; radius varies by position and variant.
-  const baseR = R * (0.85 - p * 0.018);
+function breakShape(p: number, variant: number, R: number, overflow = 0): ShapeDef {
+  // 5% radius step (was 1.8%) makes consecutive break-mode circles clearly distinct.
+  const baseR = R * (0.85 - p * 0.05 - overflow * 0.025);
   const radiusScale = variant === 1 ? 0.93 : variant === 2 ? 0.86 : 1;
-  return { d: circlePath(0, 0, baseR * radiusScale), name: "Circle" };
+  return { d: circlePath(0, 0, Math.max(baseR, R * 0.1) * radiusScale), name: "Circle" };
 }
 
-function gapShape(p: number, variant: number, R: number): ShapeDef {
+function gapShape(p: number, variant: number, R: number, overflow = 0): ShapeDef {
   const [n, k] = GAP_STAR_PRESETS[p];
   const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / n : -Math.PI / 2;
   const scale = variant === 2 ? 0.88 : 1;
-  return { d: starPath(n, k, R * scale, rotation), name: `Star {${n}/${k}}` };
+  const overflowRot = overflow * (Math.PI / n);
+  return { d: starPath(n, k, R * scale, rotation + overflowRot), name: `Star {${n}/${k}}` };
 }
