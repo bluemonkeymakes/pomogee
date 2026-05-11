@@ -32,7 +32,7 @@ export default defineConfig(async () => ({
   clearScreen: false,
   server: {
     port: 1420,
-    strictPort: !!host, // Tauri needs an exact port; web-only dev falls back gracefully
+    strictPort: true,
     host: host || false,
     hmr: host
       ? { protocol: "ws", host, port: 1421 }
