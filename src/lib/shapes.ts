@@ -185,22 +185,18 @@ export function shapeForVariant(
   // even when complexity (polygon sides / star type) has stopped increasing.
   const overflow = Math.max(0, position - COMPLEXITY_CAP);
   if (mode === "break") return breakShape(p, v, R, overflow);
-  if (mode === "gap") return gapShape(p, v, R, overflow);
-  return continuousShape(p, v, R, overflow);
+  if (mode === "gap") return gapShape(p, v, R);
+  return continuousShape(p, v, R);
 }
 
-// Golden ratio — irrational relative to any polygon's symmetry period, so
-// overflow rotations never land on a previously-seen orientation within
-// any practically reachable overflow count.
-const PHI = (Math.sqrt(5) - 1) / 2; // ≈ 0.618
-
-function continuousShape(p: number, variant: number, R: number, overflow = 0): ShapeDef {
+function continuousShape(p: number, variant: number, R: number): ShapeDef {
   const sides = 3 + p;
-  // Variants shift rotation or scale slightly for day-to-day variety.
-  const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / sides : -Math.PI / 2;
+  // Fixed 15° offset for variant 1 — same angle for every shape so all layers
+  // in today's mandala stay coherent. Variable π/sides caused large misalignment
+  // between simple polygons (60° for triangle) and complex ones (18° for decagon).
+  const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / 12 : -Math.PI / 2;
   const scale = variant === 2 ? 0.88 : 1;
-  const overflowRot = overflow * (TWO_PI / sides) * PHI;
-  return { d: polygonPath(sides, R * scale, rotation + overflowRot), name: `${sides}-gon` };
+  return { d: polygonPath(sides, R * scale, rotation), name: `${sides}-gon` };
 }
 
 function breakShape(p: number, variant: number, R: number, overflow = 0): ShapeDef {
@@ -218,10 +214,9 @@ function breakShape(p: number, variant: number, R: number, overflow = 0): ShapeD
   return { d: paths.join(" "), name: rings === 1 ? "Circle" : `Ring ×${rings}` };
 }
 
-function gapShape(p: number, variant: number, R: number, overflow = 0): ShapeDef {
+function gapShape(p: number, variant: number, R: number): ShapeDef {
   const [n, k] = GAP_STAR_PRESETS[p];
-  const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / n : -Math.PI / 2;
+  const rotation = variant === 1 ? -Math.PI / 2 + Math.PI / 12 : -Math.PI / 2;
   const scale = variant === 2 ? 0.88 : 1;
-  const overflowRot = overflow * (TWO_PI / n) * PHI;
-  return { d: starPath(n, k, R * scale, rotation + overflowRot), name: `Star {${n}/${k}}` };
+  return { d: starPath(n, k, R * scale, rotation), name: `Star {${n}/${k}}` };
 }
