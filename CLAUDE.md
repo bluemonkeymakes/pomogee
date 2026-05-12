@@ -33,12 +33,21 @@ Every completed work session maps to one SVG path determined by four independent
 
 | Input | Effect |
 |---|---|
-| `position` (0–19, capped at `COMPLEXITY_CAP=7`) | Shape complexity — polygon sides / star preset |
-| `mode` | Shape family — `continuous→polygon`, `break→circle`, `gap→star` |
-| day-of-year × 7 mod 3 | `variant` (0–2) — slight rotation or 0.88× scale |
+| `position` (0–`MAX_SHAPE_INDEX`=19, capped at `COMPLEXITY_CAP`=7) | Shape complexity — polygon sides / star preset |
+| `mode` | Shape family — `continuous→polygon`, `break→circle/rings`, `gap→star` |
+| day-of-year × 7 mod 3 | `variant` (0–2) — rotation offset or scale |
 | `startedAt` hour | Radius scale — morning 0.55×, midday 0.72×, evening 0.88×, night 1.0× |
 
-The topmost layer also gets a center inset (`dot/triangle/star/ring`) keyed to time-of-day.
+**Variant detail** — all sessions on the same day share the same variant (deterministic from day-of-year). Variant 0: baseline (no change). Variant 1: fixed +15° rotation (`π/12`) applied to polygons and stars — the angle is intentionally fixed, not `π/sides`, so all shapes in the mandala rotate by the same amount and stay visually coherent. Variant 2: 0.88× scale reduction.
+
+**Overflow behavior** — positions beyond `COMPLEXITY_CAP` (7) stop increasing polygon sides or star complexity. Break shapes continue to differentiate: each overflow position adds one more concentric ring (`rings = p + overflow`), keeping them visually distinct indefinitely.
+
+**Shape families:**
+- `continuous` (polygon): triangle at position 0, +1 side per position up to decagon at position 7.
+- `gap` (star polygon): 20 unicursal presets in `GAP_STAR_PRESETS` — pairs alternate between sparser and denser stars at the same `n` for variety (e.g. {7/2} then {7/3}).
+- `break` (circles): position 0 = 1 ring, position p = p rings, all concentric, shrinking inward. Overflow adds further rings beyond 7.
+
+**Center inset** — the topmost layer gets a small motif at center keyed to time-of-day bucket: morning→dot, midday→triangle, evening→star (pentagram), night→ring. Radius is 12% of the layer R.
 
 `shapeFor()` is the main entry point. `shapeFromFamily()` bypasses mode routing for previews.
 
