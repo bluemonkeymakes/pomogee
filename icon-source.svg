@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Dark background with rounded corners -->
+  <rect width="1024" height="1024" rx="180" fill="#0e1017"/>
+
+  <!-- Faint outer circle to ground composition -->
+  <circle cx="512" cy="512" r="448" fill="none" stroke="#e8a84c" stroke-width="6" opacity="0.12"/>
+
+  <!-- Pentagon (outermost layer — continuous work session) r=370 -->
+  <path d="M 512 142
+           L 864 398
+           L 730 811
+           L 294 811
+           L 160 398 Z"
+        fill="none" stroke="#e8a84c" stroke-width="38"
+        stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+
+  <!-- Rotated square / diamond (middle layer) r=256 -->
+  <path d="M 512 256 L 768 512 L 512 768 L 256 512 Z"
+        fill="none" stroke="#e8a84c" stroke-width="30"
+        stroke-linejoin="round" stroke-linecap="round" opacity="0.65"/>
+
+  <!-- Triangle (innermost layer) r=160, pointing up -->
+  <path d="M 512 352 L 651 594 L 373 594 Z"
+        fill="none" stroke="#e8a84c" stroke-width="24"
+        stroke-linejoin="round" stroke-linecap="round" opacity="0.38"/>
+
+  <!-- Center dot (morning motif) -->
+  <circle cx="512" cy="512" r="28" fill="#e8a84c" opacity="0.9"/>
+</svg>
