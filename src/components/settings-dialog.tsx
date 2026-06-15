@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTimer } from "@/lib/store";
+import { cn } from "@/lib/utils";
 
 export function SettingsDialog() {
   const settings = useTimer((s) => s.settings);
@@ -62,6 +63,12 @@ export function SettingsDialog() {
             onChange={(v) => update({ longBreakEvery: v })}
           />
         </div>
+        <Toggle
+          label="Jump to front on completion"
+          description="Raise and focus the window when a focus session or break finishes."
+          checked={settings.focusOnComplete}
+          onChange={(v) => update({ focusOnComplete: v })}
+        />
         <DialogFooter className="mt-2 flex-row items-center justify-between sm:justify-between">
           {confirming ? (
             <div className="flex items-center gap-2">
@@ -88,6 +95,46 @@ export function SettingsDialog() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Toggle({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  label: string;
+  description: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="flex w-full items-center justify-between gap-4 rounded-md border border-input p-3 text-left transition-colors hover:bg-accent/50"
+    >
+      <span className="space-y-0.5">
+        <span className="block text-sm font-medium leading-none">{label}</span>
+        <span className="block text-xs text-muted-foreground">{description}</span>
+      </span>
+      <span
+        className={cn(
+          "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",
+          checked ? "bg-primary" : "bg-input",
+        )}
+      >
+        <span
+          className={cn(
+            "inline-block h-4 w-4 transform rounded-full bg-background transition-transform",
+            checked ? "translate-x-4" : "translate-x-0.5",
+          )}
+        />
+      </span>
+    </button>
   );
 }
 
