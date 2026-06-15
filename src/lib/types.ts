@@ -26,6 +26,7 @@ export interface Settings {
   shortBreakMinutes: number;
   longBreakMinutes: number;
   longBreakEvery: number; // every N work sessions
+  focusOnComplete: boolean; // raise the desktop window when a phase finishes
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -33,4 +34,5 @@ export const DEFAULT_SETTINGS: Settings = {
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
   longBreakEvery: 4,
+  focusOnComplete: true,
 };

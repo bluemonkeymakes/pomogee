@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { DEFAULT_SETTINGS, type Phase, type RunState, type Session, type SessionKind, type SessionMode, type Settings } from "./types";
+import { bringWindowToFront } from "./window";
 
 /** Idle gap (ms) above which the next work session counts as `gap` mode
  * regardless of what preceded it. Tuned so a quick coffee refill stays
@@ -202,7 +203,7 @@ export const useTimer = create<TimerState>()(
         }));
         // auto-suggest next phase by setting remainingSec/phase to idle; UI prompts
         // (don't auto-start next phase — user agency)
-        void settings;
+        if (settings.focusOnComplete) void bringWindowToFront();
       },
 
       updateSettings: (s) => set((state) => ({ settings: { ...state.settings, ...s } })),
@@ -222,6 +223,16 @@ export const useTimer = create<TimerState>()(
     {
       name: "pomoge:timer",
       partialize: (s) => ({ settings: s.settings, sessions: s.sessions }),
+      // Backfill any settings field added after a user first persisted, so new
+      // options (e.g. focusOnComplete) don't read back as undefined.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<TimerState>;
+        return {
+          ...current,
+          ...p,
+          settings: { ...DEFAULT_SETTINGS, ...(p.settings ?? {}) },
+        };
+      },
     },
   ),
 );
