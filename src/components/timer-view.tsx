@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Play, Pause, Square, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Geometry, type GeometryLayer } from "@/components/geometry";
@@ -9,13 +9,27 @@ import {
   selectActiveMode,
   toYmd,
 } from "@/lib/store";
+import { useMeasure } from "@/lib/use-measure";
 import type { Session } from "@/lib/types";
 import { cn, formatTime, formatDuration } from "@/lib/utils";
 
 const RING_RADIUS = 92;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-export function TimerView() {
+// Natural (unscaled) design width of the vertical layout. Height is measured;
+// the whole block is then uniformly scaled to fit whatever window we're given.
+const COLUMN_W = 460;
+const MANDALA_COLUMN = 420;
+// Compact (short-bar) mode: mandala + clock sit side by side and scale to the
+// available top region; controls + timeline span the full width below.
+const MANDALA_COMPACT = 300;
+const CLOCK_W = 176;
+const CORE_GAP = 24;
+
+const fit = (aw: number, ah: number, nw: number, nh: number) =>
+  nw > 0 && nh > 0 ? Math.min(aw / nw, ah / nh, 1) : 1;
+
+export function TimerView({ compact }: { compact: boolean }) {
   const phase = useTimer((s) => s.phase);
   const runState = useTimer((s) => s.runState);
   const remainingSec = useTimer((s) => s.remainingSec);
@@ -71,88 +85,150 @@ export function TimerView() {
           ? runState === "paused" ? "Short Break · Paused" : "Short Break"
           : runState === "paused" ? "Long Break · Paused" : "Long Break";
 
-  return (
-    <div className="flex w-full max-w-md flex-col items-center gap-8">
-      <Geometry
-        completedLayers={completedLayers}
-        activeLayer={activeLayer}
-        progress={progress}
-        broken={streakBroken && !drawingActive}
-        size={420}
-      />
+  // Measure available space and the natural size of the content, then scale the
+  // content uniformly so it always fits — at any window width/height.
+  //   • vertical layout: fit the whole fixed-width block into `outer`.
+  //   • compact layout:  fit just the mandala+clock "core" into its top region;
+  //     controls + timeline render full-width below at native size.
+  const outerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const coreRef = useRef<HTMLDivElement>(null);
+  const outer = useMeasure(outerRef);
+  const inner = useMeasure(innerRef);
+  const core = useMeasure(coreRef);
 
-      <div className="relative flex h-44 w-44 items-center justify-center">
-        <svg
-          viewBox="-100 -100 200 200"
-          className="absolute inset-0 h-full w-full -rotate-90"
-          aria-hidden
-        >
-          <circle
-            cx={0}
-            cy={0}
-            r={RING_RADIUS}
-            className="fill-none stroke-border"
-            strokeWidth={2}
-          />
-          <circle
-            cx={0}
-            cy={0}
-            r={RING_RADIUS}
-            className="fill-none stroke-[hsl(var(--glyph-active))]"
-            strokeWidth={3}
-            strokeLinecap="round"
-            strokeDasharray={RING_CIRCUMFERENCE}
-            strokeDashoffset={phase === "idle" ? 0 : RING_CIRCUMFERENCE * progress}
-            opacity={phase === "idle" ? 0.25 : 1}
-          />
-        </svg>
-        <div className="flex flex-col items-center">
-          <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-            {phaseLabel}
-          </div>
-          <div className="mt-1 font-mono text-4xl font-light tabular-nums tracking-tight">
-            {display}
-          </div>
+  const columnScale = fit(outer.width, outer.height, inner.width, inner.height);
+  const coreScale = fit(core.width, core.height, MANDALA_COMPACT + CORE_GAP + CLOCK_W, MANDALA_COMPACT);
+
+  const mandala = (
+    <Geometry
+      completedLayers={completedLayers}
+      activeLayer={activeLayer}
+      progress={progress}
+      broken={streakBroken && !drawingActive}
+      size={compact ? MANDALA_COMPACT : MANDALA_COLUMN}
+    />
+  );
+
+  const clock = (
+    <div className="relative flex h-44 w-44 shrink-0 items-center justify-center">
+      <svg
+        viewBox="-100 -100 200 200"
+        className="absolute inset-0 h-full w-full -rotate-90"
+        aria-hidden
+      >
+        <circle
+          cx={0}
+          cy={0}
+          r={RING_RADIUS}
+          className="fill-none stroke-border"
+          strokeWidth={2}
+        />
+        <circle
+          cx={0}
+          cy={0}
+          r={RING_RADIUS}
+          className="fill-none stroke-[hsl(var(--glyph-active))]"
+          strokeWidth={3}
+          strokeLinecap="round"
+          strokeDasharray={RING_CIRCUMFERENCE}
+          strokeDashoffset={phase === "idle" ? 0 : RING_CIRCUMFERENCE * progress}
+          opacity={phase === "idle" ? 0.25 : 1}
+        />
+      </svg>
+      <div className="flex flex-col items-center">
+        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+          {phaseLabel}
+        </div>
+        <div className="mt-1 font-mono text-4xl font-light tabular-nums tracking-tight">
+          {display}
         </div>
       </div>
+    </div>
+  );
 
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        {phase === "idle" && (
-          <>
-            <Button size="sm" onClick={startWork} className="min-w-28">
-              <Play className="h-3.5 w-3.5" /> Start focus
+  const controls = (
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      {phase === "idle" && (
+        <>
+          <Button size="sm" onClick={startWork} className="min-w-28">
+            <Play className="h-3.5 w-3.5" /> Start focus
+          </Button>
+          {currentStreak > 0 && (
+            <Button size="sm" variant="secondary" onClick={() => startBreak(suggestLong ? "longBreak" : "shortBreak")}>
+              <Coffee className="h-3.5 w-3.5" /> {suggestLong ? "Long" : "Short"} break · {suggestLong ? settings.longBreakMinutes : settings.shortBreakMinutes}m
             </Button>
-            {currentStreak > 0 && (
-              <Button size="sm" variant="secondary" onClick={() => startBreak(suggestLong ? "longBreak" : "shortBreak")}>
-                <Coffee className="h-3.5 w-3.5" /> {suggestLong ? "Long" : "Short"} break · {suggestLong ? settings.longBreakMinutes : settings.shortBreakMinutes}m
-              </Button>
-            )}
-          </>
-        )}
-        {phase !== "idle" && runState === "running" && (
-          <>
-            <Button size="sm" variant="secondary" onClick={pause}>
-              <Pause className="h-3.5 w-3.5" /> Pause
-            </Button>
-            <Button size="sm" variant="ghost" onClick={stop}>
-              <Square className="h-3.5 w-3.5" /> Stop
-            </Button>
-          </>
-        )}
-        {phase !== "idle" && runState === "paused" && (
-          <>
-            <Button size="sm" onClick={resume}>
-              <Play className="h-3.5 w-3.5" /> Resume
-            </Button>
-            <Button size="sm" variant="ghost" onClick={stop}>
-              <Square className="h-3.5 w-3.5" /> Stop
-            </Button>
-          </>
-        )}
+          )}
+        </>
+      )}
+      {phase !== "idle" && runState === "running" && (
+        <>
+          <Button size="sm" variant="secondary" onClick={pause}>
+            <Pause className="h-3.5 w-3.5" /> Pause
+          </Button>
+          <Button size="sm" variant="ghost" onClick={stop}>
+            <Square className="h-3.5 w-3.5" /> Stop
+          </Button>
+        </>
+      )}
+      {phase !== "idle" && runState === "paused" && (
+        <>
+          <Button size="sm" onClick={resume}>
+            <Play className="h-3.5 w-3.5" /> Resume
+          </Button>
+          <Button size="sm" variant="ghost" onClick={stop}>
+            <Square className="h-3.5 w-3.5" /> Stop
+          </Button>
+        </>
+      )}
+    </div>
+  );
+
+  // Compact "bar" mode: a height-scaled mandala+clock on top, with the controls
+  // and timeline spanning the full width below.
+  if (compact) {
+    return (
+      <div className="flex h-full w-full min-w-0 flex-col gap-1.5 overflow-hidden px-2 py-1">
+        <div ref={coreRef} className="relative flex min-h-0 flex-1 items-center justify-center">
+          <div
+            style={{ transform: `scale(${coreScale})`, transformOrigin: "center center" }}
+            className="flex items-center gap-6 transition-transform duration-150"
+          >
+            {mandala}
+            {clock}
+          </div>
+        </div>
+        <div className="flex shrink-0 justify-center">{controls}</div>
+        <DayTimeline sessions={sessions} className="max-w-none" />
+        <div className="flex shrink-0 justify-center">
+          <TodayTotal sessions={sessions} />
+        </div>
       </div>
+    );
+  }
 
-      <DayTimeline sessions={sessions} />
-      <TodayTotal sessions={sessions} />
+  return (
+    <div
+      ref={outerRef}
+      className="relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden"
+    >
+      <div
+        ref={innerRef}
+        style={{
+          width: COLUMN_W,
+          left: "50%",
+          top: "50%",
+          transform: `translate(-50%, -50%) scale(${columnScale})`,
+          transformOrigin: "center center",
+        }}
+        className="absolute flex flex-col items-center gap-8 transition-transform duration-150"
+      >
+        {mandala}
+        {clock}
+        {controls}
+        <DayTimeline sessions={sessions} />
+        <TodayTotal sessions={sessions} />
+      </div>
     </div>
   );
 }
@@ -184,7 +260,7 @@ const TIMELINE_MARKERS = [
 
 /** Single 24h strip below the timer. Filled dots = completed work, hollow
  * dots = completed breaks. Tick marks at 6am, 12pm, 6pm for orientation. */
-function DayTimeline({ sessions }: { sessions: Session[] }) {
+function DayTimeline({ sessions, className }: { sessions: Session[]; className?: string }) {
   const today = toYmd(Date.now());
   const items = sessions
     .filter((s) => s.completed && toYmd(s.startedAt) === today)
@@ -195,7 +271,7 @@ function DayTimeline({ sessions }: { sessions: Session[] }) {
     });
 
   return (
-    <div className="relative w-full max-w-md" aria-label="Today's session timeline">
+    <div className={cn("relative w-full max-w-md", className)} aria-label="Today's session timeline">
       {/* track + dots */}
       <div className="relative h-3">
         <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" />
