@@ -88,8 +88,8 @@ export function TimerView({ compact }: { compact: boolean }) {
   // Measure available space and the natural size of the content, then scale the
   // content uniformly so it always fits — at any window width/height.
   //   • vertical layout: fit the whole fixed-width block into `outer`.
-  //   • compact layout:  fit just the mandala+clock "core" into its top region;
-  //     controls + timeline render full-width below at native size.
+  //   • compact layout:  fit the mandala+clock "core" into its row, beside the
+  //     controls; the timeline spans the full width below.
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const coreRef = useRef<HTMLDivElement>(null);
@@ -97,8 +97,10 @@ export function TimerView({ compact }: { compact: boolean }) {
   const inner = useMeasure(innerRef);
   const core = useMeasure(coreRef);
 
+  const CORE_W = MANDALA_COMPACT + CORE_GAP + CLOCK_W;
+  const CORE_H = MANDALA_COMPACT;
   const columnScale = fit(outer.width, outer.height, inner.width, inner.height);
-  const coreScale = fit(core.width, core.height, MANDALA_COMPACT + CORE_GAP + CLOCK_W, MANDALA_COMPACT);
+  const coreScale = fit(core.width, core.height, CORE_W, CORE_H);
 
   const mandala = (
     <Geometry
@@ -184,25 +186,29 @@ export function TimerView({ compact }: { compact: boolean }) {
     </div>
   );
 
-  // Compact "bar" mode: a height-scaled mandala+clock on top, with the controls
-  // and timeline spanning the full width below.
+  // Compact "bar" mode. The mandala + clock and the controls share one row that
+  // fills the available height, so the timer scales with the bar instead of
+  // being squeezed to nothing by the fixed-height controls/timeline below it.
+  // The timeline spans the full width underneath.
   if (compact) {
     return (
-      <div className="flex h-full w-full min-w-0 flex-col gap-1.5 overflow-hidden px-2 py-1">
-        <div ref={coreRef} className="relative flex min-h-0 flex-1 items-center justify-center">
-          <div
-            style={{ transform: `scale(${coreScale})`, transformOrigin: "center center" }}
-            className="flex items-center gap-6 transition-transform duration-150"
-          >
-            {mandala}
-            {clock}
+      <div className="flex h-full w-full min-w-0 flex-col gap-1.5 overflow-hidden px-3 py-1.5">
+        <div ref={coreRef} className="relative flex min-h-0 flex-1 items-center justify-center gap-5">
+          {/* footprint box sized to the scaled core so its layout width matches
+              what's visible — otherwise transform leaves a full-size box that
+              shoves the controls off-screen on a short bar. */}
+          <div style={{ width: CORE_W * coreScale, height: CORE_H * coreScale }} className="relative shrink-0">
+            <div
+              style={{ width: CORE_W, height: CORE_H, transform: `scale(${coreScale})`, transformOrigin: "top left" }}
+              className="absolute left-0 top-0 flex items-center gap-6 transition-transform duration-150"
+            >
+              {mandala}
+              {clock}
+            </div>
           </div>
+          <div className="shrink-0">{controls}</div>
         </div>
-        <div className="flex shrink-0 justify-center">{controls}</div>
-        <DayTimeline sessions={sessions} className="max-w-none" />
-        <div className="flex shrink-0 justify-center">
-          <TodayTotal sessions={sessions} />
-        </div>
+        <DayTimeline sessions={sessions} className="max-w-none shrink-0" />
       </div>
     );
   }
