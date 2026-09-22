@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm dev *)",
+      "Bash(pnpm build)",
+      "Bash(pnpm preview)",
+      "Bash(pnpm preview *)",
+      "Bash(pnpm tauri *)",
+      "Bash(pnpm run *)",
+      "Bash(npx tsc *)",
+      "Bash(pnpm exec tsc *)",
+      "Bash(cargo check *)",
+      "Bash(cargo build *)",
+      "Bash(cargo fmt *)",
+      "Bash(cargo clippy *)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  }
+}
