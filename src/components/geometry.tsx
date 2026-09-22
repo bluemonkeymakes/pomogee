@@ -68,7 +68,10 @@ export function Geometry({
     : [...completedLayers];
   const cap = MAX_SHAPE_INDEX + 1;
   const trimmed = allLayers.slice(0, cap);
-  const activeIndex = activeLayer ? Math.min(completedLayers.length, cap - 1) : -1;
+  // Once the day's mandala is full, the active layer is trimmed off above, so
+  // there is no slot to animate. Capping the index instead would re-style the
+  // last completed layer as if it were the one in flight.
+  const activeIndex = activeLayer && completedLayers.length < cap ? completedLayers.length : -1;
   // Only the topmost layer (active if present, otherwise last completed) shows
   // the time-of-day inset — drawing it on every layer creates overlapping noise.
   const insetIndex = trimmed.length - 1;
