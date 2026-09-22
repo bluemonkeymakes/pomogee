@@ -1,7 +1,17 @@
+# Coolify builds this on push to main (ADR-004). Static web build served by nginx.
+# Coolify rewrites container_name to <service>-<resourceUUID>-<suffix>; reach the
+# container by the service name, not the literal name below.
 services:
   app:
     build: .
+    image: pomogee-web:0.1.1
+    container_name: pomogee-web
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     labels:
       - traefik.enable=true
       - traefik.http.routers.pomogee.rule=Host(`pomogee.bluemonkeymakes.app`)
