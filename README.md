@@ -11,25 +11,25 @@ A Pomodoro timer desktop app built with Tauri, React, and TypeScript.
 ## Setup
 
 ```bash
-npm install
+pnpm install
 ```
 
 ## Development
 
 **Web only** (faster iteration, no desktop shell):
 ```bash
-npm run dev
+pnpm dev
 ```
 
 **Full desktop app:**
 ```bash
-npm run tauri dev
+pnpm tauri dev
 ```
 
 ## Build
 
 ```bash
-npm run tauri build
+pnpm tauri build
 ```
 
 Output is in `src-tauri/target/release/bundle/`.
