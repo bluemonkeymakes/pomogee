@@ -151,6 +151,16 @@ function Field({
   max: number;
   onChange: (n: number) => void;
 }) {
+  // Raw text while the user is typing. Clamping on every keystroke would snap
+  // an emptied field to `min` (so backspacing "25" then typing "5" gave "15");
+  // instead, commit in-range values live and clamp only on blur.
+  const [draft, setDraft] = useState<string | null>(null);
+  const commit = (raw: string) => {
+    const v = Number(raw);
+    if (raw.trim() !== "" && Number.isFinite(v)) onChange(Math.max(min, Math.min(max, Math.round(v))));
+    setDraft(null);
+  };
+
   return (
     <div className="space-y-1">
       <Label>{label}</Label>
@@ -158,11 +168,16 @@ function Field({
         type="number"
         min={min}
         max={max}
-        value={value}
+        value={draft ?? value}
         onChange={(e) => {
-          const v = Number(e.currentTarget.value);
-          if (!Number.isFinite(v)) return;
-          onChange(Math.max(min, Math.min(max, Math.round(v))));
+          const raw = e.currentTarget.value;
+          setDraft(raw);
+          const v = Number(raw);
+          if (raw.trim() !== "" && Number.isInteger(v) && v >= min && v <= max) onChange(v);
+        }}
+        onBlur={(e) => commit(e.currentTarget.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.currentTarget.blur();
         }}
       />
     </div>
