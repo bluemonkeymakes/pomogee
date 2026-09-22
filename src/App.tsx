@@ -10,9 +10,17 @@ import { cn } from "@/lib/utils";
 
 function App() {
   const { width: winW, height: winH } = useWindowSize();
-  // Short + wide window → compact "bar" mode: shrink the chrome and let the
-  // timer reflow (mandala + clock scaled down, controls/timeline span full width).
-  const compact = winH > 0 && winH < 480 && winW / winH > 1.4;
+  const aspect = winH > 0 ? winW / winH : 1;
+  // Three responsive timer layouts, by available height + aspect:
+  //   • bar       — very short + wide: mandala + clock scaled into one row.
+  //   • landscape — medium-short + wide: mandala left, clock + controls right,
+  //                 timeline across the bottom.
+  //   • column    — everything else: tall vertical stack.
+  const bar = winH > 0 && winH < 480 && aspect > 1.4;
+  const landscape = !bar && winH >= 480 && winH < 700 && aspect > 1.1;
+  const layout = bar ? "bar" : landscape ? "landscape" : "column";
+  // Tight chrome whenever vertical space is at a premium (bar or landscape).
+  const compact = bar || landscape;
 
   return (
     <ThemeProvider>
@@ -50,7 +58,7 @@ function App() {
                 <TabsTrigger value="calendar" className={cn(compact && "px-2.5 py-1 text-xs")}>Calendar</TabsTrigger>
               </TabsList>
               <TabsContent value="timer" className={cn("min-h-0 flex-1", compact ? "mt-1.5" : "mt-4")}>
-                <TimerView compact={compact} />
+                <TimerView layout={layout} />
               </TabsContent>
               <TabsContent value="calendar" className={cn("min-h-0 flex-1 overflow-auto", compact ? "mt-1.5" : "mt-4")}>
                 <CalendarView />

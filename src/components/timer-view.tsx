@@ -23,13 +23,22 @@ const MANDALA_COLUMN = 420;
 // Compact (short-bar) mode: mandala + clock sit side by side and scale to the
 // available top region; controls + timeline span the full width below.
 const MANDALA_COMPACT = 300;
-const CLOCK_W = 176;
-const CORE_GAP = 24;
+// Natural width of the bar layout: mandala + clock side by side. The whole bar
+// block (core row + controls + timeline) is scaled uniformly to fit, like the
+// column, so nothing collapses independently on a short window.
+const BAR_W = MANDALA_COMPACT + 24 + 176;
+// Natural size of the landscape right column (the clock), scaled to fit its
+// pane so it shrinks in step with the mandala on narrow windows.
+const RIGHT_W = 176;
+const RIGHT_H = 176;
 
 const fit = (aw: number, ah: number, nw: number, nh: number) =>
   nw > 0 && nh > 0 ? Math.min(aw / nw, ah / nh, 1) : 1;
 
-export function TimerView({ compact }: { compact: boolean }) {
+type Layout = "column" | "landscape" | "bar";
+
+export function TimerView({ layout }: { layout: Layout }) {
+  const compact = layout === "bar";
   const phase = useTimer((s) => s.phase);
   const runState = useTimer((s) => s.runState);
   const remainingSec = useTimer((s) => s.remainingSec);
@@ -92,15 +101,18 @@ export function TimerView({ compact }: { compact: boolean }) {
   //     controls; the timeline spans the full width below.
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
-  const coreRef = useRef<HTMLDivElement>(null);
+  const mandalaPaneRef = useRef<HTMLDivElement>(null);
+  const rightPaneRef = useRef<HTMLDivElement>(null);
   const outer = useMeasure(outerRef);
   const inner = useMeasure(innerRef);
-  const core = useMeasure(coreRef);
+  const mandalaPane = useMeasure(mandalaPaneRef);
+  const rightPane = useMeasure(rightPaneRef);
 
-  const CORE_W = MANDALA_COMPACT + CORE_GAP + CLOCK_W;
-  const CORE_H = MANDALA_COMPACT;
-  const columnScale = fit(outer.width, outer.height, inner.width, inner.height);
-  const coreScale = fit(core.width, core.height, CORE_W, CORE_H);
+  // Both the column and bar layouts scale a fixed-width block (outer/inner) to
+  // fit; only one is mounted at a time, so they share these refs.
+  const blockScale = fit(outer.width, outer.height, inner.width, inner.height);
+  const mandalaScale = fit(mandalaPane.width, mandalaPane.height, MANDALA_COLUMN, MANDALA_COLUMN);
+  const rightScale = fit(rightPane.width, rightPane.height, RIGHT_W, RIGHT_H);
 
   const mandala = (
     <Geometry
@@ -186,29 +198,73 @@ export function TimerView({ compact }: { compact: boolean }) {
     </div>
   );
 
-  // Compact "bar" mode. The mandala + clock and the controls share one row that
-  // fills the available height, so the timer scales with the bar instead of
-  // being squeezed to nothing by the fixed-height controls/timeline below it.
-  // The timeline spans the full width underneath.
-  if (compact) {
+  // Landscape "split" mode. Mandala fills the left half and the clock the right
+  // half (both scaled to fit); controls sit centered below, with the timeline
+  // spanning the full width underneath. Used on medium-short, wide windows.
+  if (layout === "landscape") {
     return (
-      <div className="flex h-full w-full min-w-0 flex-col gap-1.5 overflow-hidden px-3 py-1.5">
-        <div ref={coreRef} className="relative flex min-h-0 flex-1 items-center justify-center gap-5">
-          {/* footprint box sized to the scaled core so its layout width matches
-              what's visible — otherwise transform leaves a full-size box that
-              shoves the controls off-screen on a short bar. */}
-          <div style={{ width: CORE_W * coreScale, height: CORE_H * coreScale }} className="relative shrink-0">
-            <div
-              style={{ width: CORE_W, height: CORE_H, transform: `scale(${coreScale})`, transformOrigin: "top left" }}
-              className="absolute left-0 top-0 flex items-center gap-6 transition-transform duration-150"
-            >
-              {mandala}
-              {clock}
+      <div className="flex h-full w-full min-w-0 flex-col gap-3 overflow-hidden px-4 py-2">
+        <div className="flex min-h-0 flex-1 items-stretch gap-6">
+          <div ref={mandalaPaneRef} className="relative flex min-w-0 flex-1 items-center justify-center">
+            {/* footprint box sized to the scaled mandala so the fixed-size SVG
+                doesn't overflow/clip the pane on shorter windows. */}
+            <div style={{ width: MANDALA_COLUMN * mandalaScale, height: MANDALA_COLUMN * mandalaScale }} className="relative">
+              <div
+                style={{ width: MANDALA_COLUMN, height: MANDALA_COLUMN, transform: `scale(${mandalaScale})`, transformOrigin: "top left" }}
+                className="absolute left-0 top-0 transition-transform duration-150"
+              >
+                {mandala}
+              </div>
             </div>
           </div>
-          <div className="shrink-0">{controls}</div>
+          <div ref={rightPaneRef} className="relative flex min-w-0 flex-1 items-center justify-center">
+            <div style={{ width: RIGHT_W * rightScale, height: RIGHT_H * rightScale }} className="relative">
+              <div
+                style={{ width: RIGHT_W, height: RIGHT_H, transform: `scale(${rightScale})`, transformOrigin: "top left" }}
+                className="absolute left-0 top-0 flex items-center justify-center transition-transform duration-150"
+              >
+                {clock}
+              </div>
+            </div>
+          </div>
         </div>
+        <div className="shrink-0">{controls}</div>
         <DayTimeline sessions={sessions} className="max-w-none shrink-0" />
+        <div className="shrink-0">
+          <TodayTotal sessions={sessions} />
+        </div>
+      </div>
+    );
+  }
+
+  // Compact "bar" mode. Mandala + clock sit side by side in one row, with
+  // controls centered below and the timeline underneath. The whole block is
+  // scaled uniformly to fit so nothing collapses on a short window.
+  if (compact) {
+    return (
+      <div
+        ref={outerRef}
+        className="relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden"
+      >
+        <div
+          ref={innerRef}
+          style={{
+            width: BAR_W,
+            left: "50%",
+            top: "50%",
+            transform: `translate(-50%, -50%) scale(${blockScale})`,
+            transformOrigin: "center center",
+          }}
+          className="absolute flex flex-col items-center gap-4 transition-transform duration-150"
+        >
+          <div className="flex items-center gap-6">
+            {mandala}
+            {clock}
+          </div>
+          {controls}
+          <DayTimeline sessions={sessions} className="w-full max-w-none" />
+          <TodayTotal sessions={sessions} />
+        </div>
       </div>
     );
   }
@@ -224,7 +280,7 @@ export function TimerView({ compact }: { compact: boolean }) {
           width: COLUMN_W,
           left: "50%",
           top: "50%",
-          transform: `translate(-50%, -50%) scale(${columnScale})`,
+          transform: `translate(-50%, -50%) scale(${blockScale})`,
           transformOrigin: "center center",
         }}
         className="absolute flex flex-col items-center gap-8 transition-transform duration-150"
