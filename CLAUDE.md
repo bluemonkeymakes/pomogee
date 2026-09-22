@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Purpose
+
+Pomoge(e) — a Pomodoro timer desktop app whose completed work sessions render as a generative SVG mandala for the day.
+
+## Tech stack
+
+Tauri v2 (Rust desktop shell) + React 19 + TypeScript + Vite. Tailwind CSS + shadcn/ui for UI, Zustand for state (persisted to localStorage). Package manager is **pnpm** (`pnpm-lock.yaml`). Frontend lives in `src/`, the Rust/Tauri shell in `src-tauri/`.
+
 ## Commands
 
 ```bash
