@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { unlockAudio } from "@/lib/bell";
 import { useTimer } from "@/lib/store";
 import { useWindowSize } from "@/lib/use-measure";
 import { cn } from "@/lib/utils";
@@ -28,8 +29,22 @@ function useTicker() {
   }, [running]);
 }
 
+/** Audio stays suspended until the first interaction. Unlock it on any click
+ * or key press so a bell that rings later, off a timer, is allowed to sound. */
+function useAudioUnlock() {
+  useEffect(() => {
+    window.addEventListener("pointerdown", unlockAudio);
+    window.addEventListener("keydown", unlockAudio);
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
+  }, []);
+}
+
 function App() {
   useTicker();
+  useAudioUnlock();
   const { width: winW, height: winH } = useWindowSize();
   const aspect = winH > 0 ? winW / winH : 1;
   // Three responsive timer layouts, by available height + aspect:

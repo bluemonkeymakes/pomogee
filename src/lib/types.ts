@@ -1,3 +1,5 @@
+import type { BellTone } from "./bell";
+
 export type SessionKind = "work" | "shortBreak" | "longBreak";
 
 /** How a completed work session connects to the prior session of the day.
@@ -27,6 +29,9 @@ export interface Settings {
   longBreakMinutes: number;
   longBreakEvery: number; // every N work sessions
   focusOnComplete: boolean; // raise the desktop window when a phase finishes
+  bellOnComplete: boolean; // ring a bell when a phase finishes
+  bellTone: BellTone; // which bell rings on completion
+  bellVolume: number; // 0..1, shared by every bell in the app
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -35,4 +40,7 @@ export const DEFAULT_SETTINGS: Settings = {
   longBreakMinutes: 15,
   longBreakEvery: 4,
   focusOnComplete: true,
+  bellOnComplete: true,
+  bellTone: "focus",
+  bellVolume: 0.6,
 };
