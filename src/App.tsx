@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TimerView } from "@/components/timer-view";
 import { CalendarView } from "@/components/calendar-view";
+import { BellView } from "@/components/bell-view";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SettingsDialog } from "@/components/settings-dialog";
@@ -15,7 +16,7 @@ import { cn } from "@/lib/utils";
  * inactive tab content unmounts, which would stop the timer from completing
  * while another tab is showing. */
 function useTicker() {
-  const running = useTimer((s) => s.runState === "running");
+  const running = useTimer((s) => s.runState === "running" || s.bellRunning);
   useEffect(() => {
     if (!running) return;
     const tick = () => useTimer.getState().tick();
@@ -45,6 +46,7 @@ function useAudioUnlock() {
 function App() {
   useTicker();
   useAudioUnlock();
+  const bellRunning = useTimer((s) => s.bellRunning);
   const { width: winW, height: winH } = useWindowSize();
   const aspect = winH > 0 ? winW / winH : 1;
   // Three responsive timer layouts, by available height + aspect:
@@ -91,10 +93,19 @@ function App() {
             <Tabs defaultValue="timer" className="mx-auto flex min-h-0 w-full min-w-0 max-w-4xl flex-1 flex-col">
               <TabsList className={cn("mx-auto shrink-0", compact && "h-8")}>
                 <TabsTrigger value="timer" className={cn(compact && "px-2.5 py-1 text-xs")}>Timer</TabsTrigger>
+                <TabsTrigger value="bell" className={cn("gap-1.5", compact && "px-2.5 py-1 text-xs")}>
+                  Bell
+                  {bellRunning && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--glyph-active))]" role="status" aria-label="Bell running" />
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="calendar" className={cn(compact && "px-2.5 py-1 text-xs")}>Calendar</TabsTrigger>
               </TabsList>
               <TabsContent value="timer" className={cn("min-h-0 flex-1", compact ? "mt-1.5" : "mt-4")}>
                 <TimerView layout={layout} />
+              </TabsContent>
+              <TabsContent value="bell" className={cn("min-h-0 flex-1", compact ? "mt-1.5" : "mt-4")}>
+                <BellView compact={compact} />
               </TabsContent>
               <TabsContent value="calendar" className={cn("min-h-0 flex-1 overflow-auto", compact ? "mt-1.5" : "mt-4")}>
                 <CalendarView />
