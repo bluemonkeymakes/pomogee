@@ -19,6 +19,13 @@ interface TimerState {
   remainingSec: number; // last known remaining (also used while paused)
   durationSec: number; // current phase total
   startedAt: number | null; // epoch ms current phase began
+  // interval bell (Bell tab). Runs independently of the timer and is never
+  // persisted: a sitting is for the moment, not for the record.
+  bellRunning: boolean;
+  bellStartedAt: number | null; // epoch ms the sitting began
+  bellNextAt: number | null; // epoch ms of the next ring
+  bellRings: number; // rings completed this sitting (the opening bell is not counted)
+  bellRemainingSec: number; // last known time to the next ring
   // history
   sessions: Session[];
   // actions
@@ -27,6 +34,8 @@ interface TimerState {
   pause: () => void;
   resume: () => void;
   stop: () => void;
+  startBell: () => void;
+  stopBell: () => void;
   tick: () => void;
   finishCurrent: () => void;
   updateSettings: (s: Partial<Settings>) => void;
@@ -104,6 +113,11 @@ export const useTimer = create<TimerState>()(
       remainingSec: 0,
       durationSec: 0,
       startedAt: null,
+      bellRunning: false,
+      bellStartedAt: null,
+      bellNextAt: null,
+      bellRings: 0,
+      bellRemainingSec: 0,
       sessions: [],
 
       startWork: () => {
@@ -174,12 +188,46 @@ export const useTimer = create<TimerState>()(
         set({ phase: "idle", runState: "idle", endsAt: null, remainingSec: 0, durationSec: 0, startedAt: null });
       },
 
+      startBell: () => {
+        const { settings } = get();
+        const now = Date.now();
+        const intervalSec = settings.bellIntervalMinutes * 60;
+        set({
+          bellRunning: true,
+          bellStartedAt: now,
+          bellNextAt: now + intervalSec * 1000,
+          bellRings: 0,
+          bellRemainingSec: intervalSec,
+        });
+        // Opening bell: marks the start and confirms tone and volume.
+        playBell(settings.intervalBellTone, settings.bellVolume);
+      },
+
+      // Keeps `bellRings` so the finished drawing stays up until the next start.
+      stopBell: () => set({ bellRunning: false, bellNextAt: null, bellRemainingSec: 0 }),
+
       tick: () => {
-        const { runState, endsAt } = get();
-        if (runState !== "running" || endsAt == null) return;
-        const remaining = Math.max(0, (endsAt - Date.now()) / 1000);
-        set({ remainingSec: remaining });
-        if (remaining <= 0) get().finishCurrent();
+        const now = Date.now();
+        const { runState, endsAt, bellRunning, bellNextAt } = get();
+        if (runState === "running" && endsAt != null) {
+          const remaining = Math.max(0, (endsAt - now) / 1000);
+          set({ remainingSec: remaining });
+          if (remaining <= 0) get().finishCurrent();
+        }
+        if (bellRunning && bellNextAt != null) {
+          if (now < bellNextAt) {
+            set({ bellRemainingSec: (bellNextAt - now) / 1000 });
+          } else {
+            const { settings, bellRings } = get();
+            const intervalMs = settings.bellIntervalMinutes * 60 * 1000;
+            // After a long stall (sleep, throttling) several rings may be due.
+            // Count them all so the drawing stays truthful, but ring only once.
+            const due = Math.floor((now - bellNextAt) / intervalMs) + 1;
+            const next = bellNextAt + due * intervalMs;
+            set({ bellRings: bellRings + due, bellNextAt: next, bellRemainingSec: (next - now) / 1000 });
+            playBell(settings.intervalBellTone, settings.bellVolume);
+          }
+        }
       },
 
       finishCurrent: () => {
@@ -210,7 +258,16 @@ export const useTimer = create<TimerState>()(
         if (settings.focusOnComplete) void bringWindowToFront();
       },
 
-      updateSettings: (s) => set((state) => ({ settings: { ...state.settings, ...s } })),
+      updateSettings: (s) =>
+        set((state) => {
+          const settings = { ...state.settings, ...s };
+          // Changing the interval mid-sitting restarts the current wait at the new length.
+          if (state.bellRunning && settings.bellIntervalMinutes !== state.settings.bellIntervalMinutes) {
+            const intervalSec = settings.bellIntervalMinutes * 60;
+            return { settings, bellNextAt: Date.now() + intervalSec * 1000, bellRemainingSec: intervalSec };
+          }
+          return { settings };
+        }),
 
       reset: () =>
         set({
@@ -221,6 +278,11 @@ export const useTimer = create<TimerState>()(
           remainingSec: 0,
           durationSec: 0,
           startedAt: null,
+          bellRunning: false,
+          bellStartedAt: null,
+          bellNextAt: null,
+          bellRings: 0,
+          bellRemainingSec: 0,
           sessions: [],
         }),
     }),

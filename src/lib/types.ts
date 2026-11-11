@@ -32,6 +32,8 @@ export interface Settings {
   bellOnComplete: boolean; // ring a bell when a phase finishes
   bellTone: BellTone; // which bell rings on completion
   bellVolume: number; // 0..1, shared by every bell in the app
+  bellIntervalMinutes: number; // Bell tab: minutes between rings
+  intervalBellTone: BellTone; // Bell tab: which bell rings
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -43,4 +45,6 @@ export const DEFAULT_SETTINGS: Settings = {
   bellOnComplete: true,
   bellTone: "focus",
   bellVolume: 0.6,
+  bellIntervalMinutes: 10,
+  intervalBellTone: "relax",
 };

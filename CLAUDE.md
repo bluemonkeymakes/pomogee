@@ -26,7 +26,7 @@ There are no tests. TypeScript compilation (`tsc --noEmit`) is the primary corre
 
 ### App structure
 
-`App.tsx` is a two-tab shell (Timer / Calendar) wrapping `TimerView` and `CalendarView`. All state lives in a single Zustand store (`src/lib/store.ts`) persisted to localStorage under the key `pomoge:timer`. Only `settings` and `sessions` are persisted — runtime fields (`phase`, `runState`, `endsAt`, etc.) always reset to idle on reload.
+`App.tsx` is a three-tab shell (Timer / Bell / Calendar) wrapping `TimerView`, `BellView` and `CalendarView`. The store clock (`tick`) is driven from `App.tsx`, not from a view: inactive tab content unmounts, so a tick inside a tab stops the timer from completing while another tab shows. All state lives in a single Zustand store (`src/lib/store.ts`) persisted to localStorage under the key `pomoge:timer`. Only `settings` and `sessions` are persisted — runtime fields (`phase`, `runState`, `endsAt`, etc.) always reset to idle on reload.
 
 ### State model (`src/lib/types.ts` + `src/lib/store.ts`)
 
@@ -34,6 +34,13 @@ There are no tests. TypeScript compilation (`tsc --noEmit`) is the primary corre
 - `RunState`: `idle | running | paused`
 - `Session`: a completed (or interrupted) time block. Completed work sessions carry a `mode` (`continuous | break | gap`) and `streakIndex` (0-based count of completed work sessions that day).
 - `SessionMode` is computed at session-end: **gap** if idle >10 min before starting (`GAP_MS`), **break** if preceded by a timed break, **continuous** otherwise.
+
+### Bells (`src/lib/bell.ts` + `src/components/bell-view.tsx`)
+
+`bell.ts` synthesizes bells with Web Audio (sine partials, no audio assets). A tone is one entry in `BELL_TONES`; `playBell(tone, volume)` rings it and never throws. Two uses:
+
+- **Completion bell**: `finishCurrent()` rings `settings.bellTone` when `settings.bellOnComplete` is on.
+- **Interval bell (Bell tab)**: `startBell()` / `stopBell()` plus the `bell*` runtime fields. It runs independently of the timer, rings every `settings.bellIntervalMinutes`, and is never persisted or shown on the Calendar. `BellMandala` draws one layer per ring, eight to a round, cycling circle → polygon → star families via `shapeFromFamily()`. It is separate from the day's work mandala on purpose.
 
 ### Shape engine (`src/lib/shapes.ts`)
 
