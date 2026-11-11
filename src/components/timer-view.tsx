@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Play, Pause, Square, Coffee } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Geometry, type GeometryLayer } from "@/components/geometry";
@@ -49,7 +49,6 @@ export function TimerView({ layout }: { layout: Layout }) {
   const pause = useTimer((s) => s.pause);
   const resume = useTimer((s) => s.resume);
   const stop = useTimer((s) => s.stop);
-  const tick = useTimer((s) => s.tick);
 
   const currentStreak = useTimer(selectCurrentStreak);
   const streakBroken = useTimer(selectStreakBroken);
@@ -69,12 +68,6 @@ export function TimerView({ layout }: { layout: Layout }) {
   }, [sessions]);
   const activeLayer: GeometryLayer | null =
     activeMode && startedAt != null ? { mode: activeMode, startedAt } : null;
-
-  useEffect(() => {
-    if (runState !== "running") return;
-    const id = window.setInterval(tick, 100);
-    return () => window.clearInterval(id);
-  }, [runState, tick]);
 
   const isWork = phase === "work";
   const drawingActive = isWork && runState !== "idle";
