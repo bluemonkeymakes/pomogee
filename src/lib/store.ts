@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { DEFAULT_SETTINGS, type Phase, type RunState, type Session, type SessionKind, type SessionMode, type Settings } from "./types";
+import { playBell } from "./bell";
 import { bringWindowToFront } from "./window";
 
 /** Idle gap (ms) above which the next work session counts as `gap` mode
@@ -205,6 +206,7 @@ export const useTimer = create<TimerState>()(
         }));
         // auto-suggest next phase by setting remainingSec/phase to idle; UI prompts
         // (don't auto-start next phase — user agency)
+        if (settings.bellOnComplete) playBell(settings.bellTone, settings.bellVolume);
         if (settings.focusOnComplete) void bringWindowToFront();
       },
 

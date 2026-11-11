@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BELL_TONES, BELL_TONE_IDS, playBell, type BellTone } from "@/lib/bell";
 import { useTimer } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,31 @@ export function SettingsDialog() {
           checked={settings.focusOnComplete}
           onChange={(v) => update({ focusOnComplete: v })}
         />
+        <Toggle
+          label="Bell on completion"
+          description="Ring a bell when a focus session or break finishes."
+          checked={settings.bellOnComplete}
+          onChange={(v) => update({ bellOnComplete: v })}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <Label>Completion bell</Label>
+            <TonePicker
+              value={settings.bellTone}
+              volume={settings.bellVolume}
+              onChange={(bellTone) => update({ bellTone })}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="bell-volume">Bell volume</Label>
+            <VolumeSlider
+              id="bell-volume"
+              value={settings.bellVolume}
+              onChange={(bellVolume) => update({ bellVolume })}
+              onCommit={(v) => playBell(settings.bellTone, v)}
+            />
+          </div>
+        </div>
         <DialogFooter className="mt-2 flex-row items-center justify-between sm:justify-between">
           {confirming ? (
             <div className="flex items-center gap-2">
@@ -95,6 +121,71 @@ export function SettingsDialog() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Segmented tone choice. Picking a tone plays it, so the choice is by ear. */
+export function TonePicker({
+  value,
+  volume,
+  onChange,
+}: {
+  value: BellTone;
+  volume: number;
+  onChange: (tone: BellTone) => void;
+}) {
+  return (
+    <div role="radiogroup" className="flex h-9 rounded-md border border-input p-0.5">
+      {BELL_TONE_IDS.map((id) => (
+        <button
+          key={id}
+          type="button"
+          role="radio"
+          aria-checked={value === id}
+          onClick={() => {
+            onChange(id);
+            playBell(id, volume);
+          }}
+          className={cn(
+            "flex-1 rounded-sm px-2 text-sm transition-colors",
+            value === id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent/50",
+          )}
+        >
+          {BELL_TONES[id].label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Volume 0..1. `onCommit` fires on release, for an audible preview. */
+export function VolumeSlider({
+  id,
+  value,
+  onChange,
+  onCommit,
+}: {
+  id?: string;
+  value: number;
+  onChange: (v: number) => void;
+  onCommit?: (v: number) => void;
+}) {
+  return (
+    <div className="flex h-9 items-center">
+      <input
+        id={id}
+        type="range"
+        min={0}
+        max={100}
+        step={5}
+        value={Math.round(value * 100)}
+        aria-valuetext={`${Math.round(value * 100)}%`}
+        onChange={(e) => onChange(Number(e.currentTarget.value) / 100)}
+        onPointerUp={(e) => onCommit?.(Number(e.currentTarget.value) / 100)}
+        onKeyUp={(e) => onCommit?.(Number(e.currentTarget.value) / 100)}
+        className="w-full accent-[hsl(var(--primary))]"
+      />
+    </div>
   );
 }
 
