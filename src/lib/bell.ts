@@ -74,31 +74,6 @@ export const BELL_TONE_IDS = Object.keys(BELL_TONES) as BellTone[];
 const HEADROOM = 0.6;
 const SILENCE = 0.0001;
 
-type AudioCtor = typeof AudioContext;
-let ctx: AudioContext | null = null;
-
-function getContext(): AudioContext | null {
-  if (typeof window === "undefined") return null;
-  if (ctx) return ctx;
-  const Ctor: AudioCtor | undefined =
-    window.AudioContext ?? (window as unknown as { webkitAudioContext?: AudioCtor }).webkitAudioContext;
-  if (!Ctor) return null;
-  ctx = new Ctor();
-  return ctx;
-}
-
-/** Browsers keep audio suspended until the user interacts with the page. Call
- * this from any click or key press so a later bell (one that rings on a timer,
- * with no gesture behind it) is allowed to sound. */
-export function unlockAudio(): void {
-  try {
-    const c = getContext();
-    if (c && c.state === "suspended") void c.resume().catch(() => {});
-  } catch {
-    // Sound is never essential.
-  }
-}
-
 /** Schedule one bell on the given context. Returns the time it finishes. */
 export function scheduleBell(c: BaseAudioContext, tone: BellTone, volume: number, at: number): number {
   const def = BELL_TONES[tone];
@@ -129,16 +104,109 @@ export function scheduleBell(c: BaseAudioContext, tone: BellTone, volume: number
   return end;
 }
 
+const SAMPLE_RATE = 44100;
+
+/** 16-bit mono PCM WAV from float samples, scaled by `gain`. */
+function encodeWav(samples: Float32Array, gain: number): Blob {
+  const buf = new ArrayBuffer(44 + samples.length * 2);
+  const v = new DataView(buf);
+  const text = (offset: number, t: string) => {
+    for (let i = 0; i < t.length; i++) v.setUint8(offset + i, t.charCodeAt(i));
+  };
+  text(0, "RIFF");
+  v.setUint32(4, 36 + samples.length * 2, true);
+  text(8, "WAVEfmt ");
+  v.setUint32(16, 16, true); // fmt chunk size
+  v.setUint16(20, 1, true); // PCM
+  v.setUint16(22, 1, true); // mono
+  v.setUint32(24, SAMPLE_RATE, true);
+  v.setUint32(28, SAMPLE_RATE * 2, true); // byte rate
+  v.setUint16(32, 2, true); // block align
+  v.setUint16(34, 16, true); // bits per sample
+  text(36, "data");
+  v.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++) {
+    v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, samples[i] * gain)) * 32767, true);
+  }
+  return new Blob([buf], { type: "audio/wav" });
+}
+
+/**
+ * Bells are rendered once, offline, and played as WAV clips through an
+ * <audio> element. They are deliberately NOT played through a live
+ * AudioContext: in the desktop webview (WebKitGTK 2.52) a live context goes
+ * permanently silent, while still reporting "running", unless sound starts
+ * within a few hundredths of a second of the context being created. A bell
+ * that rings minutes after the last interaction can never meet that. Offline
+ * rendering and media-element playback are both unaffected.
+ */
+const rendered = new Map<BellTone, Promise<Float32Array>>();
+
+function samplesFor(tone: BellTone): Promise<Float32Array> {
+  let samples = rendered.get(tone);
+  if (!samples) {
+    samples = (async () => {
+      const seconds = BELL_TONES[tone].seconds + 0.25;
+      const c = new OfflineAudioContext(1, Math.ceil(SAMPLE_RATE * seconds), SAMPLE_RATE);
+      scheduleBell(c, tone, 1, 0);
+      return (await c.startRendering()).getChannelData(0);
+    })();
+    // A failed render must not poison the cache.
+    samples.catch(() => rendered.delete(tone));
+    rendered.set(tone, samples);
+  }
+  return samples;
+}
+
+/**
+ * Volume is baked into the clip's samples, never set on the element. On
+ * Linux the webview applies `audio.volume` as the system's per-stream volume,
+ * which the sound server saves for the whole "Music" stream role and restores
+ * on the next stream: setting it would quietly change the user's saved system
+ * volume, and a bell at volume 1 would come out at whatever was saved last.
+ * One clip is kept per tone, for the volume last used.
+ */
+const clips = new Map<BellTone, { volume: number; url: string }>();
+
+async function clipFor(tone: BellTone, volume: number): Promise<string> {
+  const cached = clips.get(tone);
+  if (cached && cached.volume === volume) return cached.url;
+  const samples = await samplesFor(tone);
+  // Squared so the slider tracks perceived loudness, not amplitude.
+  const url = URL.createObjectURL(encodeWav(samples, volume * volume));
+  // A bell may still be sounding from the old clip; let it finish first.
+  if (cached) window.setTimeout(() => URL.revokeObjectURL(cached.url), 30_000);
+  clips.set(tone, { volume, url });
+  return url;
+}
+
+/** Elements that are still sounding. An <audio> element with no reference
+ * left can be garbage-collected mid-playback, which cuts the bell's tail off
+ * (seen in WebKitGTK on the 11 second Relax tone). Hold them until they end. */
+const sounding = new Set<HTMLAudioElement>();
+
+/** Render every tone ahead of time so the first bell rings without delay.
+ * Called on the first click or key press; safe to call repeatedly. */
+export function unlockAudio(): void {
+  if (typeof window === "undefined" || typeof OfflineAudioContext === "undefined") return;
+  for (const tone of BELL_TONE_IDS) void samplesFor(tone).catch(() => {});
+}
+
 /** Ring a bell now. Silent no-op when muted or when audio is unavailable. */
 export function playBell(tone: BellTone, volume: number): void {
-  if (volume <= 0) return;
-  try {
-    const c = getContext();
-    if (!c) return;
-    if (c.state === "suspended") void c.resume().catch(() => {});
-    scheduleBell(c, tone, volume, c.currentTime + 0.02);
-  } catch (err) {
+  if (volume <= 0 || typeof window === "undefined" || typeof OfflineAudioContext === "undefined") return;
+  clipFor(tone, Math.min(1, volume))
+    .then((url) => {
+      const audio = new Audio(url);
+      const release = () => sounding.delete(audio);
+      audio.addEventListener("ended", release);
+      audio.addEventListener("error", release);
+      sounding.add(audio);
+      return audio.play().catch((err) => {
+        release();
+        throw err;
+      });
+    })
     // Never let sound interrupt the timer.
-    console.warn("playBell failed", err);
-  }
+    .catch((err) => console.warn("playBell failed", err));
 }

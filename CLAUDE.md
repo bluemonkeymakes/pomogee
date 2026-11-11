@@ -37,7 +37,14 @@ There are no tests. TypeScript compilation (`tsc --noEmit`) is the primary corre
 
 ### Bells (`src/lib/bell.ts` + `src/components/bell-view.tsx`)
 
-`bell.ts` synthesizes bells with Web Audio (sine partials, no audio assets). A tone is one entry in `BELL_TONES`; `playBell(tone, volume)` rings it and never throws. Two uses:
+`bell.ts` synthesizes bells from sine partials (no audio assets). A tone is one entry in `BELL_TONES`; `playBell(tone, volume)` rings it and never throws.
+
+Playback path, each step forced by a measured WebKitGTK failure (do not "simplify" back):
+- Tones are rendered **offline** (`OfflineAudioContext`) to a WAV clip and played through an `<audio>` element. A live `AudioContext` goes permanently silent in the desktop webview unless sound starts within a few hundredths of a second of its creation, while still reporting `running`.
+- **Volume is baked into the samples**, never set via `audio.volume`: on Linux the webview applies it as the stream volume, which WirePlumber saves for the whole `Music` role and restores on the next stream.
+- Playing elements are held in a set until `ended`, or they get garbage-collected mid-ring.
+
+Two uses:
 
 - **Completion bell**: `finishCurrent()` rings `settings.bellTone` when `settings.bellOnComplete` is on.
 - **Interval bell (Bell tab)**: `startBell()` / `stopBell()` plus the `bell*` runtime fields. It runs independently of the timer, rings every `settings.bellIntervalMinutes`, and is never persisted or shown on the Calendar. `BellMandala` draws one layer per ring, eight to a round, cycling circle → polygon → star families via `shapeFromFamily()`. It is separate from the day's work mandala on purpose.
