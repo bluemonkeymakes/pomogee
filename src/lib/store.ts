@@ -182,9 +182,11 @@ export const useTimer = create<TimerState>()(
       },
 
       finishCurrent: () => {
-        const { phase, startedAt, durationSec, settings } = get();
+        const { phase, startedAt, durationSec, endsAt, settings } = get();
         if (phase === "idle" || startedAt == null) return;
-        const now = Date.now();
+        // Stamp the scheduled end, not the moment we noticed: a throttled or
+        // sleeping webview can run this tick well after the deadline passed.
+        const now = endsAt != null ? Math.min(endsAt, Date.now()) : Date.now();
         const kind = phaseToKind[phase as Exclude<Phase, "idle">];
         set((state) => ({
           sessions: appendSession(state, {

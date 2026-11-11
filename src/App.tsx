@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TimerView } from "@/components/timer-view";
 import { CalendarView } from "@/components/calendar-view";
@@ -5,10 +6,30 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useTimer } from "@/lib/store";
 import { useWindowSize } from "@/lib/use-measure";
 import { cn } from "@/lib/utils";
 
+/** Drives the store clock from the app root. It must not live inside a tab:
+ * inactive tab content unmounts, which would stop the timer from completing
+ * while another tab is showing. */
+function useTicker() {
+  const running = useTimer((s) => s.runState === "running");
+  useEffect(() => {
+    if (!running) return;
+    const tick = () => useTimer.getState().tick();
+    const id = window.setInterval(tick, 100);
+    // Hidden webviews throttle timers; catch up the instant we're visible again.
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, [running]);
+}
+
 function App() {
+  useTicker();
   const { width: winW, height: winH } = useWindowSize();
   const aspect = winH > 0 ? winW / winH : 1;
   // Three responsive timer layouts, by available height + aspect:
