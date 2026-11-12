@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { Settings as SettingsIcon, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BELL_TONES, BELL_TONE_IDS, playBell, type BellTone } from "@/lib/bell";
+import { BELL_TONE_IDS, BELL_TONES, type BellTone, playBell } from "@/lib/bell";
 import { useTimer } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -137,6 +137,7 @@ export function TonePicker({
   return (
     <div role="radiogroup" className="flex h-9 rounded-md border border-input p-0.5">
       {BELL_TONE_IDS.map((id) => (
+        // biome-ignore lint/a11y/useSemanticElements: segmented control, styled buttons in a radiogroup
         <button
           key={id}
           type="button"

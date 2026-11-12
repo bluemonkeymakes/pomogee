@@ -1,7 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { DEFAULT_SETTINGS, type Phase, type RunState, type Session, type SessionKind, type SessionMode, type Settings } from "./types";
 import { playBell } from "./bell";
+import {
+  DEFAULT_SETTINGS,
+  type Phase,
+  type RunState,
+  type Session,
+  type SessionKind,
+  type SessionMode,
+  type Settings,
+} from "./types";
 import { bringWindowToFront } from "./window";
 
 /** Idle gap (ms) above which the next work session counts as `gap` mode
