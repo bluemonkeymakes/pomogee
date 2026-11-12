@@ -19,9 +19,7 @@ function resolve(theme: Theme): "light" | "dark" {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(
-    () => (localStorage.getItem(STORAGE_KEY) as Theme) || "system",
-  );
+  const [theme, setThemeState] = useState<Theme>(() => (localStorage.getItem(STORAGE_KEY) as Theme) || "system");
   const [resolved, setResolved] = useState<"light" | "dark">(() => resolve(theme));
 
   useEffect(() => {

@@ -17,10 +17,6 @@
       "Bash(cargo fmt *)",
       "Bash(cargo clippy *)"
     ],
-    "deny": [
-      "Bash(rm -rf *)",
-      "Read(./.env)",
-      "Read(./.env.*)"
-    ]
+    "deny": ["Bash(rm -rf *)", "Read(./.env)", "Read(./.env.*)"]
   }
 }

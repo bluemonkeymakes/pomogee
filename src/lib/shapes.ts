@@ -31,7 +31,10 @@ function polygonPath(n: number, R: number, rotation = -Math.PI / 2): string {
   const pts = polygonPoints(n, R, rotation);
   return (
     `M ${pts[0][0].toFixed(3)} ${pts[0][1].toFixed(3)} ` +
-    pts.slice(1).map((p) => `L ${p[0].toFixed(3)} ${p[1].toFixed(3)}`).join(" ") +
+    pts
+      .slice(1)
+      .map((p) => `L ${p[0].toFixed(3)} ${p[1].toFixed(3)}`)
+      .join(" ") +
     " Z"
   );
 }
@@ -47,7 +50,10 @@ function starPath(n: number, k: number, R: number, rotation = -Math.PI / 2): str
   } while (i !== 0);
   return (
     `M ${visited[0][0].toFixed(3)} ${visited[0][1].toFixed(3)} ` +
-    visited.slice(1).map((p) => `L ${p[0].toFixed(3)} ${p[1].toFixed(3)}`).join(" ") +
+    visited
+      .slice(1)
+      .map((p) => `L ${p[0].toFixed(3)} ${p[1].toFixed(3)}`)
+      .join(" ") +
     " Z"
   );
 }
@@ -99,7 +105,7 @@ export function dayVariantIndex(ts: number, modulo = 3): number {
   const d = new Date(ts);
   const start = new Date(d.getFullYear(), 0, 0);
   const dayOfYear = Math.floor((d.getTime() - start.getTime()) / 86400000);
-  return ((dayOfYear * 7) % modulo + modulo) % modulo;
+  return (((dayOfYear * 7) % modulo) + modulo) % modulo;
 }
 
 /** Time-of-day bucket → which inscribed motif to draw inside the layer. */
@@ -116,10 +122,10 @@ export function insetForTime(ts: number): InsetKind {
  * shapes shrink toward morning so each session has a distinct visual footprint. */
 export function scaleForTime(ts: number): number {
   const h = new Date(ts).getHours();
-  if (h >= 5 && h < 12) return 0.55;  // morning
+  if (h >= 5 && h < 12) return 0.55; // morning
   if (h >= 12 && h < 17) return 0.72; // midday
   if (h >= 17 && h < 22) return 0.88; // evening
-  return 1.0;                          // night
+  return 1.0; // night
 }
 
 /** Path for the small inscribed motif at the center of a layer. Used as a
@@ -143,12 +149,7 @@ export function insetPath(kind: InsetKind, R: number): string {
  * Mode families: polygons (work/continuous), circles (break), star polygons (gap).
  * If `startedAt` is provided, a day-variant (0–2) is derived from the day-of-year
  * and applied uniformly — same family, slight rotation or scale difference. */
-export function shapeFor(
-  position: number,
-  mode: SessionMode,
-  R: number,
-  startedAt?: number,
-): ShapeDef {
+export function shapeFor(position: number, mode: SessionMode, R: number, startedAt?: number): ShapeDef {
   const variant = startedAt != null ? dayVariantIndex(startedAt, 3) : 0;
   const scaledR = startedAt != null ? R * scaleForTime(startedAt) : R;
   return shapeForVariant(position, mode, scaledR, variant);
@@ -158,27 +159,17 @@ export function shapeFor(
  * Useful for experiments and previews that want to override the normal mapping. */
 export type ShapeFamily = "polygon" | "circle" | "star";
 
-export function shapeFromFamily(
-  family: ShapeFamily,
-  position: number,
-  R: number,
-  variant: number,
-): ShapeDef {
+export function shapeFromFamily(family: ShapeFamily, position: number, R: number, variant: number): ShapeDef {
   const p = Math.max(0, Math.min(position, COMPLEXITY_CAP));
   const v = ((variant % 3) + 3) % 3;
   if (family === "circle") return breakShape(p, v, R);
-  if (family === "star")   return gapShape(p, v, R);
+  if (family === "star") return gapShape(p, v, R);
   return continuousShape(p, v, R);
 }
 
 /** Same as `shapeFor` but takes a variant index directly. Useful for
  * previews and the showcase view. */
-export function shapeForVariant(
-  position: number,
-  mode: SessionMode,
-  R: number,
-  variant: number,
-): ShapeDef {
+export function shapeForVariant(position: number, mode: SessionMode, R: number, variant: number): ShapeDef {
   const p = Math.max(0, Math.min(position, COMPLEXITY_CAP));
   const v = ((variant % 3) + 3) % 3;
   // Sessions beyond the cap get a rotation offset so they remain visually distinct

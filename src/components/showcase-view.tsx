@@ -1,23 +1,23 @@
 import { useMemo } from "react";
+import type { GeometryLayer } from "@/components/geometry";
 import {
+  COMPLEXITY_CAP,
+  dayVariantIndex,
+  type InsetKind,
+  insetForTime,
+  insetPath,
+  MAX_SHAPE_INDEX,
+  type ShapeFamily,
+  scaleForTime,
   shapeForVariant,
   shapeFromFamily,
-  insetPath,
-  insetForTime,
-  scaleForTime,
-  dayVariantIndex,
-  MAX_SHAPE_INDEX,
-  COMPLEXITY_CAP,
-  type ShapeFamily,
-  type InsetKind,
 } from "@/lib/shapes";
-import { useTimer, toYmd } from "@/lib/store";
+import { toYmd, useTimer } from "@/lib/store";
 import type { SessionMode } from "@/lib/types";
-import type { GeometryLayer } from "@/components/geometry";
 import { cn } from "@/lib/utils";
 
-const VIEW    = 400;
-const RADIUS  = 160;
+const VIEW = 400;
+const RADIUS = 160;
 const CELL_SIZE = 56;
 const MODES: SessionMode[] = ["continuous", "break", "gap"];
 
@@ -46,8 +46,7 @@ const EXPERIMENTS: Experiment[] = [
     id: "current",
     label: "current",
     note: "continuous→polygon · break→circle · gap→star",
-    familyFor: (_, mode) =>
-      mode === "break" ? "circle" : mode === "gap" ? "star" : "polygon",
+    familyFor: (_, mode) => (mode === "break" ? "circle" : mode === "gap" ? "star" : "polygon"),
     timeScale: true,
   },
   {
@@ -61,12 +60,7 @@ const EXPERIMENTS: Experiment[] = [
     id: "streak-star",
     label: "streak reward",
     note: "polygon p0–1 · star p2+ (continuous) · circle for break",
-    familyFor: (p, mode) =>
-      mode === "break"
-        ? "circle"
-        : mode === "continuous" && p >= 2
-          ? "star"
-          : "polygon",
+    familyFor: (p, mode) => (mode === "break" ? "circle" : mode === "continuous" && p >= 2 ? "star" : "polygon"),
     timeScale: true,
   },
   {
@@ -80,8 +74,7 @@ const EXPERIMENTS: Experiment[] = [
     id: "no-time",
     label: "flat radius",
     note: "current family rules · no time-of-day size scaling",
-    familyFor: (_, mode) =>
-      mode === "break" ? "circle" : mode === "gap" ? "star" : "polygon",
+    familyFor: (_, mode) => (mode === "break" ? "circle" : mode === "gap" ? "star" : "polygon"),
     timeScale: false,
   },
 ];
@@ -101,7 +94,7 @@ const SYNTHETIC_GROUPS: Group[] = [
     layers: [
       { mode: "continuous", startedAt: makeTs(8) },
       { mode: "continuous", startedAt: makeTs(8, 35) },
-      { mode: "break",      startedAt: makeTs(9, 15) },
+      { mode: "break", startedAt: makeTs(9, 15) },
       { mode: "continuous", startedAt: makeTs(10) },
       { mode: "continuous", startedAt: makeTs(10, 40) },
     ],
@@ -111,20 +104,20 @@ const SYNTHETIC_GROUPS: Group[] = [
     desc: "continuous + gap + break · 9am–8pm",
     layers: [
       { mode: "continuous", startedAt: makeTs(9) },
-      { mode: "break",      startedAt: makeTs(9, 35) },
+      { mode: "break", startedAt: makeTs(9, 35) },
       { mode: "continuous", startedAt: makeTs(10, 15) },
-      { mode: "gap",        startedAt: makeTs(15) },
+      { mode: "gap", startedAt: makeTs(15) },
       { mode: "continuous", startedAt: makeTs(15, 45) },
-      { mode: "break",      startedAt: makeTs(20) },
+      { mode: "break", startedAt: makeTs(20) },
     ],
   },
   {
     label: "late session",
     desc: "gap back-in → flow · 7–11pm",
     layers: [
-      { mode: "gap",        startedAt: makeTs(19) },
+      { mode: "gap", startedAt: makeTs(19) },
       { mode: "continuous", startedAt: makeTs(19, 35) },
-      { mode: "break",      startedAt: makeTs(20, 15) },
+      { mode: "break", startedAt: makeTs(20, 15) },
       { mode: "continuous", startedAt: makeTs(21) },
       { mode: "continuous", startedAt: makeTs(21, 35) },
     ],
@@ -134,10 +127,7 @@ const SYNTHETIC_GROUPS: Group[] = [
 // ── Experiment mandala ─────────────────────────────────────────────────────
 
 /** Mirror of the harmony rule in geometry.tsx: one star per time-zone bucket. */
-function resolveExperimentFamilies(
-  layers: GeometryLayer[],
-  familyFor: FamilyFn,
-): ShapeFamily[] {
+function resolveExperimentFamilies(layers: GeometryLayer[], familyFor: FamilyFn): ShapeFamily[] {
   const claimed = new Set<number>();
   return layers.map((layer, i) => {
     const family = familyFor(i, layer.mode);
@@ -166,39 +156,48 @@ function ExperimentMandala({
       width={size}
       height={size}
       className="select-none rounded-md border bg-card"
-      aria-hidden
+      aria-hidden="true"
     >
       <circle
-        cx={0} cy={0} r={RADIUS + 12}
-        fill="none" stroke="currentColor"
+        cx={0}
+        cy={0}
+        r={RADIUS + 12}
+        fill="none"
+        stroke="currentColor"
         className="stroke-border"
-        strokeWidth={0.5} strokeDasharray="2 4"
+        strokeWidth={0.5}
+        strokeDasharray="2 4"
       />
       {layers.map((layer, i) => {
-        const family  = families[i];
+        const family = families[i];
         const variant = dayVariantIndex(layer.startedAt, 3);
-        const scale   = experiment.timeScale ? scaleForTime(layer.startedAt) : 1;
-        const { d }   = shapeFromFamily(family, i, RADIUS * scale, variant);
-        const isTop   = i === insetIndex;
+        const scale = experiment.timeScale ? scaleForTime(layer.startedAt) : 1;
+        const { d } = shapeFromFamily(family, i, RADIUS * scale, variant);
+        const isTop = i === insetIndex;
         return (
+          // biome-ignore lint/suspicious/noArrayIndexKey: a layer is defined by its position, so the index is its identity
           <g key={i}>
             <path
               d={d}
               vectorEffect="non-scaling-stroke"
-              fill="none" stroke="currentColor"
+              fill="none"
+              stroke="currentColor"
               className="stroke-foreground"
               strokeWidth={1.6}
-              strokeLinejoin="round" strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeLinecap="round"
               strokeOpacity={0.85}
             />
             {isTop && (
               <path
                 d={insetPath(insetForTime(layer.startedAt), RADIUS * scale)}
                 vectorEffect="non-scaling-stroke"
-                fill="none" stroke="currentColor"
+                fill="none"
+                stroke="currentColor"
                 className="stroke-foreground"
                 strokeWidth={1.2}
-                strokeLinejoin="round" strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeLinecap="round"
                 strokeOpacity={0.5}
               />
             )}
@@ -251,29 +250,33 @@ interface ComboSpec {
 }
 
 const COMBOS_2: ComboSpec[] = [
-  { label: "poly · poly",     families: ["polygon", "polygon"] },
-  { label: "poly · circle",   families: ["polygon", "circle"] },
-  { label: "poly · star",     families: ["polygon", "star"] },
+  { label: "poly · poly", families: ["polygon", "polygon"] },
+  { label: "poly · circle", families: ["polygon", "circle"] },
+  { label: "poly · star", families: ["polygon", "star"] },
   { label: "circle · circle", families: ["circle", "circle"] },
-  { label: "circle · star",   families: ["circle", "star"] },
-  { label: "star · star",     families: ["star", "star"] },
+  { label: "circle · star", families: ["circle", "star"] },
+  { label: "star · star", families: ["star", "star"] },
 ];
 
 const COMBOS_3: ComboSpec[] = [
-  { label: "poly · poly · poly",   families: ["polygon", "polygon", "polygon"] },
+  { label: "poly · poly · poly", families: ["polygon", "polygon", "polygon"] },
   { label: "poly · poly · circle", families: ["polygon", "polygon", "circle"] },
-  { label: "poly · poly · star",   families: ["polygon", "polygon", "star"] },
+  { label: "poly · poly · star", families: ["polygon", "polygon", "star"] },
   { label: "poly · circle · star", families: ["polygon", "circle", "star"] },
-  { label: "poly · star · star",   families: ["polygon", "star", "star"] },
-  { label: "circ · circ · circ",   families: ["circle", "circle", "circle"] },
-  { label: "circ · circ · star",   families: ["circle", "circle", "star"] },
-  { label: "circ · star · star",   families: ["circle", "star", "star"] },
-  { label: "star · star · star",   families: ["star", "star", "star"] },
+  { label: "poly · star · star", families: ["polygon", "star", "star"] },
+  { label: "circ · circ · circ", families: ["circle", "circle", "circle"] },
+  { label: "circ · circ · star", families: ["circle", "circle", "star"] },
+  { label: "circ · star · star", families: ["circle", "star", "star"] },
+  { label: "star · star · star", families: ["star", "star", "star"] },
 ];
 
 const COMBO_STARTS = [0, 4, 8] as const;
 
-function ComboMandala({ families, startPos, size = 110 }: {
+function ComboMandala({
+  families,
+  startPos,
+  size = 110,
+}: {
   families: ShapeFamily[];
   startPos: number;
   size?: number;
@@ -281,19 +284,34 @@ function ComboMandala({ families, startPos, size = 110 }: {
   return (
     <svg
       viewBox={`${-VIEW / 2} ${-VIEW / 2} ${VIEW} ${VIEW}`}
-      width={size} height={size}
+      width={size}
+      height={size}
       className="select-none rounded-md border bg-card"
-      aria-hidden
+      aria-hidden="true"
     >
-      <circle cx={0} cy={0} r={RADIUS + 12} fill="none"
-        className="stroke-border" strokeWidth={0.5} strokeDasharray="2 4" />
+      <circle
+        cx={0}
+        cy={0}
+        r={RADIUS + 12}
+        fill="none"
+        className="stroke-border"
+        strokeWidth={0.5}
+        strokeDasharray="2 4"
+      />
       {families.map((family, i) => {
         const { d } = shapeFromFamily(family, startPos + i, RADIUS, 0);
         return (
-          <path key={i} d={d} vectorEffect="non-scaling-stroke"
-            fill="none" stroke="currentColor"
+          <path
+            // biome-ignore lint/suspicious/noArrayIndexKey: a layer is defined by its position, so the index is its identity
+            key={i}
+            d={d}
+            vectorEffect="non-scaling-stroke"
+            fill="none"
+            stroke="currentColor"
             className="stroke-foreground"
-            strokeWidth={1.6} strokeLinejoin="round" strokeLinecap="round"
+            strokeWidth={1.6}
+            strokeLinejoin="round"
+            strokeLinecap="round"
             strokeOpacity={0.85}
           />
         );
@@ -333,8 +351,8 @@ function CombosSection() {
       <div className="space-y-1">
         <h3 className="font-serif text-base uppercase tracking-[0.2em]">Stack combinations</h3>
         <p className="text-xs text-muted-foreground">
-          Flat radius · variant 0 · columns = p0 / p4 / p8.
-          Complexity cap at p{COMPLEXITY_CAP} — shapes plateau beyond that position.
+          Flat radius · variant 0 · columns = p0 / p4 / p8. Complexity cap at p{COMPLEXITY_CAP} — shapes plateau beyond
+          that position.
         </p>
       </div>
       <div className="overflow-x-auto space-y-8">
@@ -361,21 +379,39 @@ function Cell({ d, insetD, label, sublabel, title, size = CELL_SIZE }: CellProps
     <div className="flex flex-col items-center gap-0.5" title={title}>
       <svg
         viewBox={`${-VIEW / 2} ${-VIEW / 2} ${VIEW} ${VIEW}`}
-        width={size} height={size}
+        width={size}
+        height={size}
         className="select-none rounded-md border bg-card"
-        aria-hidden
+        aria-hidden="true"
       >
-        <circle cx={0} cy={0} r={RADIUS + 12} fill="none"
-          className="stroke-border" strokeWidth={0.5} strokeDasharray="2 4" />
-        <path d={d} vectorEffect="non-scaling-stroke"
+        <circle
+          cx={0}
+          cy={0}
+          r={RADIUS + 12}
+          fill="none"
+          className="stroke-border"
+          strokeWidth={0.5}
+          strokeDasharray="2 4"
+        />
+        <path
+          d={d}
+          vectorEffect="non-scaling-stroke"
           className="fill-none stroke-foreground"
-          strokeWidth={1.6} strokeLinejoin="round" strokeLinecap="round"
-          strokeOpacity={0.85} />
+          strokeWidth={1.6}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          strokeOpacity={0.85}
+        />
         {insetD && (
-          <path d={insetD} vectorEffect="non-scaling-stroke"
+          <path
+            d={insetD}
+            vectorEffect="non-scaling-stroke"
             className="fill-none stroke-foreground"
-            strokeWidth={1.2} strokeLinejoin="round" strokeLinecap="round"
-            strokeOpacity={0.6} />
+            strokeWidth={1.2}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            strokeOpacity={0.6}
+          />
         )}
       </svg>
       <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{label}</span>
@@ -385,26 +421,34 @@ function Cell({ d, insetD, label, sublabel, title, size = CELL_SIZE }: CellProps
 }
 
 const TIME_BUCKETS = [
-  { label: "morning · 5–12",  scale: scaleForTime(makeTs(8))  },
-  { label: "midday · 12–17",  scale: scaleForTime(makeTs(14)) },
+  { label: "morning · 5–12", scale: scaleForTime(makeTs(8)) },
+  { label: "midday · 12–17", scale: scaleForTime(makeTs(14)) },
   { label: "evening · 17–22", scale: scaleForTime(makeTs(19)) },
-  { label: "night · 22–5",    scale: scaleForTime(makeTs(23)) },
+  { label: "night · 22–5", scale: scaleForTime(makeTs(23)) },
 ];
 
 const INSET_KINDS: ReadonlyArray<{ kind: InsetKind; bucket: string }> = [
-  { kind: "dot",      bucket: "morning · 5–12"  },
-  { kind: "triangle", bucket: "midday · 12–17"  },
-  { kind: "star",     bucket: "evening · 17–22" },
-  { kind: "ring",     bucket: "night · 22–5"    },
+  { kind: "dot", bucket: "morning · 5–12" },
+  { kind: "triangle", bucket: "midday · 12–17" },
+  { kind: "star", bucket: "evening · 17–22" },
+  { kind: "ring", bucket: "night · 22–5" },
 ];
 
 function RulesLegend() {
   const rules = [
-    { trigger: "session.mode",               effect: "shape family",    detail: "continuous→polygon · break→circle · gap→star" },
-    { trigger: "position (0–19)",            effect: "shape complexity",detail: "increments sides / star preset per session" },
-    { trigger: "day-of-year × 7 mod 3",      effect: "variant (0–2)",   detail: "0: default · 1: rotated half-step · 2: scale 0.88×" },
-    { trigger: "startedAt hour",             effect: "radius scale",    detail: "morning 0.55 · midday 0.72 · evening 0.88 · night 1.0" },
-    { trigger: "startedAt hour (top layer)", effect: "center inset",    detail: "dot · triangle · star · ring" },
+    { trigger: "session.mode", effect: "shape family", detail: "continuous→polygon · break→circle · gap→star" },
+    { trigger: "position (0–19)", effect: "shape complexity", detail: "increments sides / star preset per session" },
+    {
+      trigger: "day-of-year × 7 mod 3",
+      effect: "variant (0–2)",
+      detail: "0: default · 1: rotated half-step · 2: scale 0.88×",
+    },
+    {
+      trigger: "startedAt hour",
+      effect: "radius scale",
+      detail: "morning 0.55 · midday 0.72 · evening 0.88 · night 1.0",
+    },
+    { trigger: "startedAt hour (top layer)", effect: "center inset", detail: "dot · triangle · star · ring" },
   ];
   return (
     <section className="space-y-2">
@@ -441,7 +485,9 @@ function ModeBlock({ mode }: { mode: SessionMode }) {
         {[0, 1, 2].map((variant) => (
           <div key={variant} className="flex items-start gap-3">
             <div className="w-28 shrink-0 pt-1">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">variant {variant}</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                variant {variant}
+              </div>
               <div className="text-[9px] text-muted-foreground/60">
                 {variant === 1 ? "rotated half-step" : variant === 2 ? "scale 0.88×" : "default rotation"}
               </div>
@@ -449,6 +495,7 @@ function ModeBlock({ mode }: { mode: SessionMode }) {
             <div className="flex flex-wrap gap-1">
               {Array.from({ length: MAX_SHAPE_INDEX + 1 }, (_, position) => {
                 const { d, name } = shapeForVariant(position, mode, RADIUS, variant);
+                // biome-ignore lint/suspicious/noArrayIndexKey: a layer is defined by its position, so the index is its identity
                 return <Cell key={position} d={d} label={`p${position}`} title={name} />;
               })}
             </div>
@@ -519,14 +566,16 @@ export function ShowcaseView({ className }: { className?: string }) {
       <header className="space-y-1">
         <h2 className="font-serif text-2xl">Shape showcase</h2>
         <p className="text-sm text-muted-foreground">
-          Experiments compare different family-assignment rules across session groups.
-          Real store data appears as "today" when sessions exist.
+          Experiments compare different family-assignment rules across session groups. Real store data appears as
+          "today" when sessions exist.
         </p>
       </header>
       <ExperimentsSection groups={groups} />
       <CombosSection />
       <RulesLegend />
-      {MODES.map((mode) => <ModeBlock key={mode} mode={mode} />)}
+      {MODES.map((mode) => (
+        <ModeBlock key={mode} mode={mode} />
+      ))}
       <TimeScaleBlock />
       <InsetsBlock />
     </div>

@@ -1,26 +1,26 @@
-import { useMemo, useState } from "react";
 import {
-  startOfMonth,
-  endOfMonth,
-  startOfWeek,
-  endOfWeek,
-  eachDayOfInterval,
-  format,
-  isSameMonth,
-  isSameDay,
-  addMonths,
-  subMonths,
-  addWeeks,
-  subWeeks,
   addDays,
+  addMonths,
+  addWeeks,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  startOfMonth,
+  startOfWeek,
   subDays,
+  subMonths,
+  subWeeks,
 } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Geometry, type GeometryLayer, GlyphSummary } from "@/components/geometry";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Geometry, GlyphSummary, type GeometryLayer } from "@/components/geometry";
-import { useTimer, toYmd } from "@/lib/store";
+import { toYmd, useTimer } from "@/lib/store";
 import type { Session } from "@/lib/types";
 import { cn, formatDuration } from "@/lib/utils";
 
@@ -138,17 +138,18 @@ export function CalendarView() {
             </Button>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setCursor(new Date())}>Today</Button>
+            <Button variant="ghost" size="sm" onClick={() => setCursor(new Date())}>
+              Today
+            </Button>
             <div className="flex overflow-hidden rounded-md border text-xs">
               {(["month", "week", "day"] as ViewMode[]).map((v) => (
                 <button
+                  type="button"
                   key={v}
                   onClick={() => setView(v)}
                   className={cn(
                     "px-2.5 py-1 capitalize transition-colors",
-                    view === v
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground",
+                    view === v ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {v}
@@ -161,27 +162,12 @@ export function CalendarView() {
 
       <CardContent>
         {view === "month" && (
-          <MonthGrid
-            cursor={cursor}
-            today={today}
-            sessionsByDay={sessionsByDay}
-            onDayClick={goToDay}
-          />
+          <MonthGrid cursor={cursor} today={today} sessionsByDay={sessionsByDay} onDayClick={goToDay} />
         )}
         {view === "week" && (
-          <WeekGrid
-            cursor={cursor}
-            today={today}
-            sessionsByDay={sessionsByDay}
-            onDayClick={goToDay}
-          />
+          <WeekGrid cursor={cursor} today={today} sessionsByDay={sessionsByDay} onDayClick={goToDay} />
         )}
-        {view === "day" && (
-          <DayView
-            date={cursor}
-            sessions={sessionsByDay.get(toYmd(cursor.getTime())) ?? []}
-          />
-        )}
+        {view === "day" && <DayView date={cursor} sessions={sessionsByDay.get(toYmd(cursor.getTime())) ?? []} />}
         {view === "month" && <MonthSummary stats={monthStats} bestStreak={bestStreak} />}
       </CardContent>
     </Card>
@@ -225,15 +211,14 @@ function MonthGrid({
             <Popover key={ymd}>
               <PopoverTrigger asChild>
                 <button
+                  type="button"
                   className={cn(
                     "group relative flex aspect-square flex-col items-center justify-center rounded-md border bg-card p-1 text-xs transition-colors hover:bg-accent",
                     !isCurrentMonth && "opacity-40",
                     isToday && "ring-2 ring-ring",
                   )}
                 >
-                  <span className="absolute left-1 top-1 text-[10px] text-muted-foreground">
-                    {format(d, "d")}
-                  </span>
+                  <span className="absolute left-1 top-1 text-[10px] text-muted-foreground">{format(d, "d")}</span>
                   <GlyphSummary layers={stats.layers} broken={stats.broken} size={36} />
                   {stats.workCompleted > 0 && (
                     <span className="absolute bottom-0.5 right-1 font-mono text-[10px] tabular-nums text-muted-foreground">
@@ -243,12 +228,7 @@ function MonthGrid({
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-64">
-                <DayPopover
-                  date={d}
-                  sessions={daySessions}
-                  stats={stats}
-                  onOpenDay={() => onDayClick(d)}
-                />
+                <DayPopover date={d} sessions={daySessions} stats={stats} onOpenDay={() => onDayClick(d)} />
               </PopoverContent>
             </Popover>
           );
@@ -286,6 +266,7 @@ function WeekGrid({
         const isToday = isSameDay(d, today);
         return (
           <button
+            type="button"
             key={ymd}
             onClick={() => onDayClick(d)}
             className={cn(
@@ -294,12 +275,8 @@ function WeekGrid({
             )}
           >
             <div className="flex flex-col items-center">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                {format(d, "EEE")}
-              </span>
-              <span className={cn("font-mono text-sm tabular-nums", isToday && "font-bold")}>
-                {format(d, "d")}
-              </span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{format(d, "EEE")}</span>
+              <span className={cn("font-mono text-sm tabular-nums", isToday && "font-bold")}>{format(d, "d")}</span>
             </div>
             <GlyphSummary layers={stats.layers} broken={stats.broken} size={48} />
             {stats.workCompleted > 0 ? (
@@ -320,20 +297,11 @@ function WeekGrid({
 
 function DayView({ sessions }: { date: Date; sessions: Session[] }) {
   const stats = useMemo(() => statsForDay(sessions), [sessions]);
-  const sorted = useMemo(
-    () => [...sessions].sort((a, b) => a.startedAt - b.startedAt),
-    [sessions],
-  );
+  const sorted = useMemo(() => [...sessions].sort((a, b) => a.startedAt - b.startedAt), [sessions]);
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <Geometry
-        completedLayers={stats.layers}
-        activeLayer={null}
-        progress={1}
-        broken={stats.broken}
-        size={220}
-      />
+      <Geometry completedLayers={stats.layers} activeLayer={null} progress={1} broken={stats.broken} size={220} />
 
       <div className="w-full max-w-sm">
         {sorted.length === 0 ? (
@@ -352,16 +320,8 @@ function DayView({ sessions }: { date: Date; sessions: Session[] }) {
                       s.kind === "work" ? "bg-foreground" : "bg-muted-foreground",
                     )}
                   />
-                  <span className="text-muted-foreground tabular-nums">
-                    {format(new Date(s.startedAt), "h:mm a")}
-                  </span>
-                  <span>
-                    {s.kind === "work"
-                      ? "Work"
-                      : s.kind === "shortBreak"
-                        ? "Short break"
-                        : "Long break"}
-                  </span>
+                  <span className="text-muted-foreground tabular-nums">{format(new Date(s.startedAt), "h:mm a")}</span>
+                  <span>{s.kind === "work" ? "Work" : s.kind === "shortBreak" ? "Short break" : "Long break"}</span>
                   {s.kind === "work" && s.mode && s.mode !== "continuous" && (
                     <span className="rounded-sm bg-muted px-1 text-[10px] uppercase tracking-wider text-muted-foreground">
                       {s.mode}
@@ -418,7 +378,8 @@ function DayPopover({
         <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
           <dt className="text-muted-foreground">Focus</dt>
           <dd className="text-right tabular-nums">
-            {stats.workCompleted}{stats.works > stats.workCompleted ? `/${stats.works}` : ""} · {formatDuration(stats.focusMinutes)}
+            {stats.workCompleted}
+            {stats.works > stats.workCompleted ? `/${stats.works}` : ""} · {formatDuration(stats.focusMinutes)}
           </dd>
           <dt className="text-muted-foreground">Short breaks</dt>
           <dd className="text-right tabular-nums">{stats.shortBreaks}</dd>

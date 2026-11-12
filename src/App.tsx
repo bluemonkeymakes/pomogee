@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TimerView } from "@/components/timer-view";
-import { CalendarView } from "@/components/calendar-view";
 import { BellView } from "@/components/bell-view";
+import { CalendarView } from "@/components/calendar-view";
+import { SettingsDialog } from "@/components/settings-dialog";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { SettingsDialog } from "@/components/settings-dialog";
+import { TimerView } from "@/components/timer-view";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { unlockAudio } from "@/lib/bell";
 import { useTimer } from "@/lib/store";
@@ -65,21 +65,45 @@ function App() {
       <TooltipProvider>
         <div className="flex h-full flex-col overflow-hidden">
           <header
-            className={cn(
-              "flex shrink-0 items-center justify-between border-b",
-              compact ? "px-3 py-1" : "px-4 py-2.5",
-            )}
+            className={cn("flex shrink-0 items-center justify-between border-b", compact ? "px-3 py-1" : "px-4 py-2.5")}
           >
             <div className="flex items-baseline gap-2">
               <span className={cn("font-serif tracking-wide", compact ? "text-base" : "text-xl")}>
                 Pom
-                <svg viewBox="-50 -50 100 100" width={compact ? 16 : 20} height={compact ? 16 : 20} className="inline-block align-middle mx-0.5 -translate-y-px" aria-hidden>
-                  <path d="M 0 -38 L 22.336 -30.743 L 36.14 -11.743 L 36.14 11.743 L 22.336 30.743 L 0 38 L -22.336 30.743 L -36.14 11.743 L -36.14 -11.743 L -22.336 -30.743 Z"
-                    fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" strokeOpacity="0.28"/>
-                  <path d="M 0 -38 L 36.14 -11.743 L 22.336 30.743 L -22.336 30.743 L -36.14 -11.743 Z"
-                    fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" strokeOpacity="0.55"/>
-                  <path d="M 0 -38 L 32.909 19 L -32.909 19 Z"
-                    fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" strokeOpacity="0.88"/>
+                <svg
+                  viewBox="-50 -50 100 100"
+                  width={compact ? 16 : 20}
+                  height={compact ? 16 : 20}
+                  className="inline-block align-middle mx-0.5 -translate-y-px"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M 0 -38 L 22.336 -30.743 L 36.14 -11.743 L 36.14 11.743 L 22.336 30.743 L 0 38 L -22.336 30.743 L -36.14 11.743 L -36.14 -11.743 L -22.336 -30.743 Z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    strokeOpacity="0.28"
+                  />
+                  <path
+                    d="M 0 -38 L 36.14 -11.743 L 22.336 30.743 L -22.336 30.743 L -36.14 -11.743 Z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    strokeOpacity="0.55"
+                  />
+                  <path
+                    d="M 0 -38 L 32.909 19 L -32.909 19 Z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    strokeOpacity="0.88"
+                  />
                 </svg>
                 gee
               </span>
@@ -92,14 +116,21 @@ function App() {
           <main className={cn("flex min-h-0 flex-1 flex-col", compact ? "px-2 py-1.5" : "px-4 py-3")}>
             <Tabs defaultValue="timer" className="mx-auto flex min-h-0 w-full min-w-0 max-w-4xl flex-1 flex-col">
               <TabsList className={cn("mx-auto shrink-0", compact && "h-8")}>
-                <TabsTrigger value="timer" className={cn(compact && "px-2.5 py-1 text-xs")}>Timer</TabsTrigger>
+                <TabsTrigger value="timer" className={cn(compact && "px-2.5 py-1 text-xs")}>
+                  Timer
+                </TabsTrigger>
                 <TabsTrigger value="bell" className={cn("gap-1.5", compact && "px-2.5 py-1 text-xs")}>
                   Bell
                   {bellRunning && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--glyph-active))]" role="status" aria-label="Bell running" />
+                    <output
+                      className="block h-1.5 w-1.5 rounded-full bg-[hsl(var(--glyph-active))]"
+                      aria-label="Bell running"
+                    />
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="calendar" className={cn(compact && "px-2.5 py-1 text-xs")}>Calendar</TabsTrigger>
+                <TabsTrigger value="calendar" className={cn(compact && "px-2.5 py-1 text-xs")}>
+                  Calendar
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="timer" className={cn("min-h-0 flex-1", compact ? "mt-1.5" : "mt-4")}>
                 <TimerView layout={layout} />

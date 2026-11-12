@@ -1,8 +1,8 @@
 import { Bell, Square } from "lucide-react";
+import { TonePicker } from "@/components/settings-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { TonePicker } from "@/components/settings-dialog";
-import { shapeFromFamily, type ShapeFamily } from "@/lib/shapes";
+import { type ShapeFamily, shapeFromFamily } from "@/lib/shapes";
 import { useTimer } from "@/lib/store";
 import { cn, formatDuration, formatTime } from "@/lib/utils";
 
@@ -157,7 +157,14 @@ function BellMandala({
       role="img"
       aria-label={`Bell mandala, ${rings} ${rings === 1 ? "layer" : "layers"}`}
     >
-      <circle cx={0} cy={0} r={RADIUS + 12} className="fill-none stroke-border" strokeWidth={0.5} strokeDasharray="2 4" />
+      <circle
+        cx={0}
+        cy={0}
+        r={RADIUS + 12}
+        className="fill-none stroke-border"
+        strokeWidth={0.5}
+        strokeDasharray="2 4"
+      />
       {indices.map((i) => (
         <path
           key={i}

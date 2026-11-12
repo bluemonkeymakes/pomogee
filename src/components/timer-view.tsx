@@ -1,17 +1,11 @@
+import { Coffee, Pause, Play, Square } from "lucide-react";
 import { useMemo, useRef } from "react";
-import { Play, Pause, Square, Coffee } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Geometry, type GeometryLayer } from "@/components/geometry";
-import {
-  useTimer,
-  selectCurrentStreak,
-  selectStreakBroken,
-  selectActiveMode,
-  toYmd,
-} from "@/lib/store";
-import { useMeasure } from "@/lib/use-measure";
+import { Button } from "@/components/ui/button";
+import { selectActiveMode, selectCurrentStreak, selectStreakBroken, toYmd, useTimer } from "@/lib/store";
 import type { Session } from "@/lib/types";
-import { cn, formatTime, formatDuration } from "@/lib/utils";
+import { useMeasure } from "@/lib/use-measure";
+import { cn, formatDuration, formatTime } from "@/lib/utils";
 
 const RING_RADIUS = 92;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
@@ -32,8 +26,7 @@ const BAR_W = MANDALA_COMPACT + 24 + 176;
 const RIGHT_W = 176;
 const RIGHT_H = 176;
 
-const fit = (aw: number, ah: number, nw: number, nh: number) =>
-  nw > 0 && nh > 0 ? Math.min(aw / nw, ah / nh, 1) : 1;
+const fit = (aw: number, ah: number, nw: number, nh: number) => (nw > 0 && nh > 0 ? Math.min(aw / nw, ah / nh, 1) : 1);
 
 type Layout = "column" | "landscape" | "bar";
 
@@ -66,15 +59,13 @@ export function TimerView({ layout }: { layout: Layout }) {
     }
     return layers;
   }, [sessions]);
-  const activeLayer: GeometryLayer | null =
-    activeMode && startedAt != null ? { mode: activeMode, startedAt } : null;
+  const activeLayer: GeometryLayer | null = activeMode && startedAt != null ? { mode: activeMode, startedAt } : null;
 
   const isWork = phase === "work";
   const drawingActive = isWork && runState !== "idle";
   const progress = durationSec > 0 ? 1 - remainingSec / durationSec : 0;
 
-  const suggestLong =
-    currentStreak > 0 && currentStreak % settings.longBreakEvery === 0;
+  const suggestLong = currentStreak > 0 && currentStreak % settings.longBreakEvery === 0;
 
   const display = phase === "idle" ? formatTime(settings.workMinutes * 60) : formatTime(remainingSec);
 
@@ -82,10 +73,16 @@ export function TimerView({ layout }: { layout: Layout }) {
     phase === "idle"
       ? "Ready"
       : phase === "work"
-        ? runState === "paused" ? "Focus · Paused" : "Focus"
+        ? runState === "paused"
+          ? "Focus · Paused"
+          : "Focus"
         : phase === "shortBreak"
-          ? runState === "paused" ? "Short Break · Paused" : "Short Break"
-          : runState === "paused" ? "Long Break · Paused" : "Long Break";
+          ? runState === "paused"
+            ? "Short Break · Paused"
+            : "Short Break"
+          : runState === "paused"
+            ? "Long Break · Paused"
+            : "Long Break";
 
   // Measure available space and the natural size of the content, then scale the
   // content uniformly so it always fits — at any window width/height.
@@ -119,18 +116,8 @@ export function TimerView({ layout }: { layout: Layout }) {
 
   const clock = (
     <div className="relative flex h-44 w-44 shrink-0 items-center justify-center">
-      <svg
-        viewBox="-100 -100 200 200"
-        className="absolute inset-0 h-full w-full -rotate-90"
-        aria-hidden
-      >
-        <circle
-          cx={0}
-          cy={0}
-          r={RING_RADIUS}
-          className="fill-none stroke-border"
-          strokeWidth={2}
-        />
+      <svg viewBox="-100 -100 200 200" className="absolute inset-0 h-full w-full -rotate-90" aria-hidden="true">
+        <circle cx={0} cy={0} r={RING_RADIUS} className="fill-none stroke-border" strokeWidth={2} />
         <circle
           cx={0}
           cy={0}
@@ -144,12 +131,8 @@ export function TimerView({ layout }: { layout: Layout }) {
         />
       </svg>
       <div className="flex flex-col items-center">
-        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-          {phaseLabel}
-        </div>
-        <div className="mt-1 font-mono text-4xl font-light tabular-nums tracking-tight">
-          {display}
-        </div>
+        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">{phaseLabel}</div>
+        <div className="mt-1 font-mono text-4xl font-light tabular-nums tracking-tight">{display}</div>
       </div>
     </div>
   );
@@ -163,7 +146,8 @@ export function TimerView({ layout }: { layout: Layout }) {
           </Button>
           {currentStreak > 0 && (
             <Button size="sm" variant="secondary" onClick={() => startBreak(suggestLong ? "longBreak" : "shortBreak")}>
-              <Coffee className="h-3.5 w-3.5" /> {suggestLong ? "Long" : "Short"} break · {suggestLong ? settings.longBreakMinutes : settings.shortBreakMinutes}m
+              <Coffee className="h-3.5 w-3.5" /> {suggestLong ? "Long" : "Short"} break ·{" "}
+              {suggestLong ? settings.longBreakMinutes : settings.shortBreakMinutes}m
             </Button>
           )}
         </>
@@ -201,9 +185,17 @@ export function TimerView({ layout }: { layout: Layout }) {
           <div ref={mandalaPaneRef} className="relative flex min-w-0 flex-1 items-center justify-center">
             {/* footprint box sized to the scaled mandala so the fixed-size SVG
                 doesn't overflow/clip the pane on shorter windows. */}
-            <div style={{ width: MANDALA_COLUMN * mandalaScale, height: MANDALA_COLUMN * mandalaScale }} className="relative">
+            <div
+              style={{ width: MANDALA_COLUMN * mandalaScale, height: MANDALA_COLUMN * mandalaScale }}
+              className="relative"
+            >
               <div
-                style={{ width: MANDALA_COLUMN, height: MANDALA_COLUMN, transform: `scale(${mandalaScale})`, transformOrigin: "top left" }}
+                style={{
+                  width: MANDALA_COLUMN,
+                  height: MANDALA_COLUMN,
+                  transform: `scale(${mandalaScale})`,
+                  transformOrigin: "top left",
+                }}
                 className="absolute left-0 top-0 transition-transform duration-150"
               >
                 {mandala}
@@ -213,7 +205,12 @@ export function TimerView({ layout }: { layout: Layout }) {
           <div ref={rightPaneRef} className="relative flex min-w-0 flex-1 items-center justify-center">
             <div style={{ width: RIGHT_W * rightScale, height: RIGHT_H * rightScale }} className="relative">
               <div
-                style={{ width: RIGHT_W, height: RIGHT_H, transform: `scale(${rightScale})`, transformOrigin: "top left" }}
+                style={{
+                  width: RIGHT_W,
+                  height: RIGHT_H,
+                  transform: `scale(${rightScale})`,
+                  transformOrigin: "top left",
+                }}
                 className="absolute left-0 top-0 flex items-center justify-center transition-transform duration-150"
               >
                 {clock}
@@ -235,10 +232,7 @@ export function TimerView({ layout }: { layout: Layout }) {
   // scaled uniformly to fit so nothing collapses on a short window.
   if (compact) {
     return (
-      <div
-        ref={outerRef}
-        className="relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden"
-      >
+      <div ref={outerRef} className="relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden">
         <div
           ref={innerRef}
           style={{
@@ -263,10 +257,7 @@ export function TimerView({ layout }: { layout: Layout }) {
   }
 
   return (
-    <div
-      ref={outerRef}
-      className="relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden"
-    >
+    <div ref={outerRef} className="relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden">
       <div
         ref={innerRef}
         style={{
@@ -308,7 +299,7 @@ function TodayTotal({ sessions }: { sessions: Session[] }) {
 }
 
 const TIMELINE_MARKERS = [
-  { hour: 6,  label: "6am" },
+  { hour: 6, label: "6am" },
   { hour: 12, label: "12pm" },
   { hour: 18, label: "6pm" },
 ];
@@ -326,25 +317,19 @@ function DayTimeline({ sessions, className }: { sessions: Session[]; className?:
     });
 
   return (
-    <div className={cn("relative w-full max-w-md", className)} aria-label="Today's session timeline">
+    <section className={cn("relative w-full max-w-md", className)} aria-label="Today's session timeline">
       {/* track + dots */}
       <div className="relative h-3">
         <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" />
         {TIMELINE_MARKERS.map(({ hour }) => (
-          <div
-            key={hour}
-            className="absolute top-1/2 h-1/2 w-px bg-border"
-            style={{ left: `${(hour / 24) * 100}%` }}
-          />
+          <div key={hour} className="absolute top-1/2 h-1/2 w-px bg-border" style={{ left: `${(hour / 24) * 100}%` }} />
         ))}
         {items.map((it) => (
           <div
             key={it.id}
             className={cn(
               "absolute top-1/2 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full",
-              it.isWork
-                ? "bg-muted-foreground"
-                : "border border-muted-foreground bg-background",
+              it.isWork ? "bg-muted-foreground" : "border border-muted-foreground bg-background",
             )}
             style={{ left: `${it.fraction * 100}%` }}
           />
@@ -362,6 +347,6 @@ function DayTimeline({ sessions, className }: { sessions: Session[]; className?:
           </span>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

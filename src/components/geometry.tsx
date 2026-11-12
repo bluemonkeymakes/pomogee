@@ -1,4 +1,4 @@
-import { shapeFor, insetPath, insetForTime, scaleForTime, MAX_SHAPE_INDEX } from "@/lib/shapes";
+import { insetForTime, insetPath, MAX_SHAPE_INDEX, scaleForTime, shapeFor } from "@/lib/shapes";
 import type { SessionMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -55,17 +55,8 @@ const RADIUS = 160;
  * by its (position, mode) — see `shapeFor`. The active layer strokes in based
  * on `progress`; past layers are drawn fully (faded + dashed if broken).
  */
-export function Geometry({
-  completedLayers,
-  activeLayer,
-  progress,
-  broken,
-  size = 360,
-  className,
-}: GeometryProps) {
-  const allLayers: GeometryLayer[] = activeLayer
-    ? [...completedLayers, activeLayer]
-    : [...completedLayers];
+export function Geometry({ completedLayers, activeLayer, progress, broken, size = 360, className }: GeometryProps) {
+  const allLayers: GeometryLayer[] = activeLayer ? [...completedLayers, activeLayer] : [...completedLayers];
   const cap = MAX_SHAPE_INDEX + 1;
   const trimmed = allLayers.slice(0, cap);
   // Once the day's mandala is full, the active layer is trimmed off above, so
@@ -77,8 +68,7 @@ export function Geometry({
   const insetIndex = trimmed.length - 1;
 
   const renderModes = resolveRenderModes(trimmed);
-  const calmActive = activeIndex >= 0 &&
-    (renderModes[activeIndex] === "break" || renderModes[activeIndex] === "gap");
+  const calmActive = activeIndex >= 0 && (renderModes[activeIndex] === "break" || renderModes[activeIndex] === "gap");
 
   return (
     <svg
@@ -103,9 +93,7 @@ export function Geometry({
         const isActive = i === activeIndex;
         const isTop = i === insetIndex;
         const clamped = Math.max(0, Math.min(1, progress));
-        const activeStroke = calmActive
-          ? "stroke-[hsl(var(--glyph))]"
-          : "stroke-[hsl(var(--glyph-active))]";
+        const activeStroke = calmActive ? "stroke-[hsl(var(--glyph))]" : "stroke-[hsl(var(--glyph-active))]";
         const activeWidth = calmActive ? 1.2 : 2;
         const outlineClass = isActive
           ? activeStroke
@@ -115,6 +103,7 @@ export function Geometry({
         const outlineWidth = isActive ? activeWidth : 1.6;
         const outlineOpacity = isActive ? (calmActive ? 0.9 : 1) : broken ? 0.55 : 0.9;
         return (
+          // biome-ignore lint/suspicious/noArrayIndexKey: a layer is defined by its position, so the index is its identity
           <g key={i}>
             <path
               d={d}
@@ -132,10 +121,7 @@ export function Geometry({
               <path
                 d={insetPath(insetForTime(layer.startedAt), RADIUS)}
                 vectorEffect="non-scaling-stroke"
-                className={cn(
-                  "fill-none",
-                  broken ? "stroke-[hsl(var(--glyph-broken))]" : "stroke-[hsl(var(--glyph))]",
-                )}
+                className={cn("fill-none", broken ? "stroke-[hsl(var(--glyph-broken))]" : "stroke-[hsl(var(--glyph))]")}
                 strokeWidth={1.2}
                 strokeLinejoin="round"
                 strokeLinecap="round"
@@ -173,19 +159,17 @@ export function GlyphSummary({
       width={size}
       height={size}
       className={cn("select-none", className)}
-      aria-hidden
+      aria-hidden="true"
     >
       {trimmed.map((layer, i) => {
         const { d } = shapeFor(i, renderModes[i], RADIUS, layer.startedAt);
         return (
           <path
+            // biome-ignore lint/suspicious/noArrayIndexKey: a layer is defined by its position, so the index is its identity
             key={i}
             d={d}
             vectorEffect="non-scaling-stroke"
-            className={cn(
-              "fill-none",
-              broken ? "stroke-[hsl(var(--glyph-broken))]" : "stroke-[hsl(var(--glyph))]",
-            )}
+            className={cn("fill-none", broken ? "stroke-[hsl(var(--glyph-broken))]" : "stroke-[hsl(var(--glyph))]")}
             strokeWidth={1.5}
             strokeLinejoin="round"
             strokeLinecap="round"
