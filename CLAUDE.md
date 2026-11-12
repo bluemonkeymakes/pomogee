@@ -43,6 +43,7 @@ Playback path, each step forced by a measured WebKitGTK failure (do not "simplif
 - Tones are rendered **offline** (`OfflineAudioContext`) to a WAV clip and played through an `<audio>` element. A live `AudioContext` goes permanently silent in the desktop webview unless sound starts within a few hundredths of a second of its creation, while still reporting `running`.
 - **Volume is baked into the samples**, never set via `audio.volume`: on Linux the webview applies it as the stream volume, which WirePlumber saves for the whole `Music` role and restores on the next stream.
 - Playing elements are held in a set until `ended`, or they get garbage-collected mid-ring.
+- The clips are `blob:` URLs, so the desktop CSP in `tauri.conf.json` needs `media-src 'self' blob:`. Without it `default-src 'self'` blocks them and the bell is silent with no visible error.
 
 Two uses:
 
